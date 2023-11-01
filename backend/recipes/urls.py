@@ -20,5 +20,7 @@ router_v1.register(
 router_v1.register(r'tags', TagViewSet, basename='tags')
 
 urlpatterns = [
-    path('', include(router_v1.urls))
+    path('', include(router_v1.urls)),
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.jwt'))
 ]
