@@ -1,12 +1,21 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
+from django.utils import timezone
 
 
 ROLES = (
     ('user', 'пользователь'),
     ('admin', 'администратор')
 )
+
+
+class BlacklistedToken(models.Model):
+    token = models.CharField(max_length=500)
+    blacklisted_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.token
 
 
 class User(AbstractUser):
@@ -22,7 +31,7 @@ class User(AbstractUser):
                     'Имя пользователя может содержать только буквы и цифры'
                     ),
                 code='invalid_field',
-            )
+            ),
         ],
         verbose_name='Логин'
     )
@@ -32,7 +41,7 @@ class User(AbstractUser):
         verbose_name='Имя пользователя',
     )
     last_name = models.CharField(
-        blank=True,
+        blank=False,
         max_length=150,
         verbose_name='Фамилия пользователя'
     )

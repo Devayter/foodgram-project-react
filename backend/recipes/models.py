@@ -1,6 +1,3 @@
-from django.db import models
-
-# Create your models here.
 from django.contrib.auth import get_user_model
 from django.db import models
 
@@ -70,7 +67,7 @@ class Ingredient(models.Model):
         unique=True,
         verbose_name='Наименование ингредиента'
     )
-    measure = models.CharField(
+    measurement = models.CharField(
         blank=False,
         max_length=15,
         verbose_name='Единица измерения'
@@ -102,9 +99,8 @@ class Recipe(models.Model):
         verbose_name='Описание рецепта'
     )
     image = models.ImageField(
-        blank=True,
-        null=True,
-        upload_to='ricepes/',
+        blank=False,
+        upload_to='recipes/images',
         verbose_name='Фото блюда')
     ingredients = models.ManyToManyField(
         Ingredient,
@@ -141,7 +137,7 @@ class RecipeIngredient(models.Model):
     )
 
     def __str__(self):
-        return f'{self.amount} {self.ingredient}'
+        return f'{self.amount} {self.ingredient.measurement} {self.ingredient}'
 
 
 class RecipeTag(models.Model):

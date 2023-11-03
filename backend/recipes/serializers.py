@@ -5,6 +5,7 @@ from django.core.files.base import ContentFile
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
+from .constants import RECIPE_ALREADY_EXISTS_ERROR
 from .models import (
     Favorites, Follow, Ingredient, Recipe, RecipeIngredient,
     RecipeTag, ShoppingCart, Tag, User
@@ -20,25 +21,6 @@ class Base64ImageField(serializers.ImageField):
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
 
         return super().to_internal_value(data)
-
-
-class FavoritesSerializer(serializers.ModelSerializer):
-    recipe = 'RecipeSerializer(many=True)'
-    user = serializers.SlugRelatedField(
-        default=serializers.CurrentUserDefault(),
-        queryset=User.objects.all(),
-        slug_field='username'
-    )
-    validators = [
-        UniqueTogetherValidator(
-            queryset=Favorites.objects.all(),
-            fields=('recipe', 'user')
-        )
-    ]
-
-    class Meta:
-        fields = ('recipe', 'user')
-        model = Favorites
 
 
 class FollowSerializer(serializers.ModelSerializer):
@@ -85,11 +67,15 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     amount = serializers.IntegerField(),
+    measurement = serializers.StringRelatedField(
+        source='ingredient.measurement',
+        )
     recipe = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         fields = '__all__'
         model = RecipeIngredient
+        read_only_fields = ('measurement',)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -129,8 +115,11 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
 
     def create(self, validated_data):
+        description = validated_data['description']
         ingredients_data = validated_data.pop('ingredients_used')
         tags_data = validated_data.pop('tags')
+        if Recipe.objects.filter(description=description):
+            raise serializers.ValidationError(RECIPE_ALREADY_EXISTS_ERROR)
         recipe = Recipe.objects.create(**validated_data)
         recipe_id = recipe.id
         for ingredient_data in ingredients_data:
@@ -141,14 +130,42 @@ class RecipeSerializer(serializers.ModelSerializer):
         return recipe
 
 
+class FavoritesSerializer(serializers.ModelSerializer):
+    recipe = RecipeSerializer()
+    user = serializers.SlugRelatedField(
+        default=serializers.CurrentUserDefault(),
+        queryset=User.objects.all(),
+        slug_field='username'
+    )
+    validators = [
+        UniqueTogetherValidator(
+            queryset=Favorites.objects.all(),
+            fields=('recipe', 'user')
+        )
+    ]
+
+    class Meta:
+        fields = '__all__'
+        model = Favorites
+        read_only_fields = ('recipe',)
+
+
 class ShoppingCartSerializer(serializers.ModelSerializer):
-    recipe = RecipeSerializer(many=True)
+    recipe = RecipeSerializer()
     user = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
         queryset=User.objects.all(),
         slug_field='username'
     )
 
+    validators = [
+        UniqueTogetherValidator(
+            queryset=Favorites.objects.all(),
+            fields=('recipe', 'user')
+        )
+    ]
+
     class Meta:
         fields = '__all__'
         model = ShoppingCart
+        read_only_fields = ('recipe',)
