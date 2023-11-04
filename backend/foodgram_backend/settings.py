@@ -98,11 +98,15 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
    'ACCESS_TOKEN_LIFETIME': timedelta(days=5),
-   'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=10),
    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-
+CELERY_BEAT_SCHEDULE = {
+    'delete_expired_blacklisted_tokens': {
+        'task': 'yourapp.tasks.delete_expired_blacklisted_tokens',
+        'schedule': timedelta(days=1),  # Запускать каждый день
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

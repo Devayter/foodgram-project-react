@@ -9,12 +9,10 @@ from .constants import (
     NOT_IN_FAVORITES_MESSAGE, NOT_IN_SHOP_CART_MESSAGE,
     SHOP_CART_DELETE_MESSAGE, SHOP_CART_EXISTS_MESSAGE
 )
-from .models import (
-    Favorites, Follow, Ingredient, Recipe, ShoppingCart, Tag
-)
+from .models import Favorites, Ingredient, Recipe, ShoppingCart, Tag
 from .mixins import CreateDestroyListMixin
 from .serializers import (
-    FavoritesSerializer, FollowSerializer, IngredientSerializer,
+    FavoritesSerializer, IngredientSerializer,
     RecipeSerializer, ShoppingCartSerializer, TagSerializer
 )
 
@@ -54,15 +52,6 @@ class FavoritesViewSet(CreateDestroyListMixin):
 
     def get_queryset(self):
         return Favorites.objects.filter(user=self.request.user)
-
-
-class FollowViewSet(CreateDestroyListMixin):
-    serializer_class = FollowSerializer
-
-    def get_queryset(self):
-        return Follow.objects.select_related.all().filter(
-            user=self.request.user
-        )
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
@@ -112,7 +101,7 @@ class ShoppingCartViewSet(CreateDestroyListMixin):
         return ShoppingCart.objects.filter(user=self.request.user)
 
 
-class ShoppingCartDownLoadViewSet(APIView):
+class ShoppingCartDownLoadView(APIView):
     '''Класс для загрузки списка покупок с суммированием повторяющихся
       ингредиентов'''
     serializer_class = ShoppingCartSerializer

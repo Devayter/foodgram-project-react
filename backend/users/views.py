@@ -7,17 +7,54 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from .constants import (
-    EMAIL_ALREADY_EXIST, LOGGED_OUT, NOT_AUTHORIZER, PASSWORD_CHANGED_MESSAGE,
+    EMAIL_ALREADY_EXISTS, LOGGED_OUT, NOT_AUTHORIZER, NOT_SUBSCRIBED,
+    PASSWORD_CHANGED_MESSAGE, SUBSCRIPTION_ALREADY_EXISTS, UNSUBSCRIBED,
     USERNAME_ALREADY_EXIST
 )
-from .mixins import UserMeViewSetMixin
+from .mixins import CreateDestroyListMixin, UserMeViewSetMixin
+from .models import Subscribe
 from .serializers import (
    SetPasswordSerializer, BlacklistedTokenSerializer, SignupSerializer,
-   TokenSerializer,
-   UserMeSerializer, UserSerializer
+   SubscribeSerializer, TokenSerializer, UserMeSerializer, UserSerializer
 )
 
 User = get_user_model()
+
+
+class GetSubscribeView(CreateDestroyListMixin):
+    serializer_class = SubscribeSerializer
+
+    def create(self, request, *args, **kwargs):
+        user = get_object_or_404(User, id=self.kwargs.get('user_id'))
+        subscriber = request.user
+
+        if not Subscribe.objects.filter(user=user, subscriber=subscriber):
+            subscribe = Subscribe.objects.create(
+                user=user,
+                subscriber=subscriber
+                )
+            serializer = self.get_serializer(subscribe)
+            return Response(
+                serializer.data, status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(
+                SUBSCRIPTION_ALREADY_EXISTS,
+                status=status.HTTP_400_BAD_REQUEST
+                )
+
+    def destroy(self, request, *args, **kwargs):
+        user = get_object_or_404(User, id=self.kwargs.get('user_id'))
+        subscriber = request.user
+
+        try:
+            subscribe = Subscribe.objects.get(user=user, subscriber=subscriber)
+            subscribe.delete()
+            return Response(UNSUBSCRIBED, status=status.HTTP_204_NO_CONTENT)
+        except Subscribe.DoesNotExist:
+            return Response(
+                NOT_SUBSCRIBED, status=status.HTTP_400_BAD_REQUEST
+                )
 
 
 class LogInView(APIView):
@@ -28,9 +65,9 @@ class LogInView(APIView):
 
         if serializer.is_valid():
             validated_data = serializer.validated_data
-            username = validated_data['username']
+            email = validated_data['email']
             password = request.data.get('password')
-            user = authenticate(username=username, password=password)
+            user = authenticate(email=email, password=password)
 
             if user is not None:
                 access_token = AccessToken.for_user(user)
@@ -44,7 +81,7 @@ class LogInView(APIView):
                 )
             else:
                 return Response(
-                    {'message': 'Неправильное имя пользователя или пароль'},
+                    {'message': 'Неправильная электронная почта или пароль'},
                     status=status.HTTP_404_NOT_FOUND
                 )
 
@@ -96,6 +133,15 @@ class SetPasswordView(APIView):
             )
 
 
+class SubscribeViewSet(CreateDestroyListMixin):
+    serializer_class = SubscribeSerializer
+
+    def get_queryset(self):
+        return Subscribe.objects.select_related('user').all().filter(
+            subscriber=self.request.user
+        )
+
+
 class UserMeAPIView(UserMeViewSetMixin):
     """Вьюсет пользователя для запроса /users/me/"""
     serializer_class = UserMeSerializer
@@ -125,7 +171,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 )
         elif User.objects.filter(email=email).exists():
             return Response(
-                EMAIL_ALREADY_EXIST,
+                EMAIL_ALREADY_EXISTS,
                 status=status.HTTP_400_BAD_REQUEST
                 )
         else:

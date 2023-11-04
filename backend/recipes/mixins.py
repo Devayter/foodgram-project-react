@@ -10,7 +10,7 @@ class CreateDestroyListMixin(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    """Базовый класс для классов FavoritesViewSet и FollowViewSet"""
+    """Базовый класс для FavoritesViewSet и ShoppingCartViewSet"""
 
     def get_recipe(self):
         return get_object_or_404(Recipe, id=self.kwargs.get('recipe_id'))

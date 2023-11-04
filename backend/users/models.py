@@ -18,6 +18,34 @@ class BlacklistedToken(models.Model):
         return self.token
 
 
+class Subscribe(models.Model):
+    '''Модель подписок'''
+    user = models.ForeignKey(
+        'User',
+        blank=False,
+        on_delete=models.CASCADE,
+        related_name='user',
+        verbose_name='Пользователь'
+    )
+    subscriber = models.ForeignKey(
+        'User',
+        blank=False,
+        on_delete=models.CASCADE,
+        related_name='subscriber',
+        verbose_name='Подписчик'
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'subscriber'),
+                name='unique_user_subscriber'
+            )
+        ]
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+
+
 class User(AbstractUser):
     '''Модель пользователя'''
     username = models.CharField(
@@ -26,9 +54,10 @@ class User(AbstractUser):
         unique=True,
         validators=[
             RegexValidator(
-                regex=r'^[a-zA-Z0-9]+$',
+                regex=r'^[\w.@+-]+$',
                 message=(
-                    'Имя пользователя может содержать только буквы и цифры'
+                    'Неправильный формат поля'
+                    'Допустимы только буквы, цифры и символы @ . + -'
                     ),
                 code='invalid_field',
             ),
@@ -63,3 +92,5 @@ class User(AbstractUser):
         ordering = ['username', ]
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+

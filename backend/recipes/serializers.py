@@ -7,7 +7,7 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from .constants import RECIPE_ALREADY_EXISTS_ERROR
 from .models import (
-    Favorites, Follow, Ingredient, Recipe, RecipeIngredient,
+    Favorites, Ingredient, Recipe, RecipeIngredient,
     RecipeTag, ShoppingCart, Tag, User
 )
 
@@ -21,29 +21,6 @@ class Base64ImageField(serializers.ImageField):
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
 
         return super().to_internal_value(data)
-
-
-class FollowSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(
-        default=serializers.CurrentUserDefault(),
-        queryset=User.objects.all(),
-        slug_field='username'
-    )
-    following = serializers.SlugRelatedField(
-        queryset=User.objects.all(),
-        read_only=False,
-        slug_field='username'
-    )
-    validators = [
-        UniqueTogetherValidator(
-            queryset=Favorites.objects.all(),
-            fields=('recipe', 'following')
-        )
-    ]
-
-    class Meta:
-        fields = ('user', 'following')
-        model = Follow
 
 
 class Hex2NameColor(serializers.Field):

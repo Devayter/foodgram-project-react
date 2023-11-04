@@ -31,34 +31,6 @@ class Favorites(models.Model):
         verbose_name = 'Избранное'
 
 
-class Follow(models.Model):
-    '''Модель подписок'''
-    user = models.ForeignKey(
-        User,
-        blank=False,
-        on_delete=models.CASCADE,
-        related_name='user',
-        verbose_name='Пользователь'
-    )
-    following = models.ForeignKey(
-        User,
-        blank=False,
-        on_delete=models.CASCADE,
-        related_name='following',
-        verbose_name='Подписчик'
-    )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=('user', 'following'),
-                name='unique_user_following'
-            )
-        ]
-        verbose_name = 'Подписка'
-        verbose_name_plural = 'Подписки'
-
-
 class Ingredient(models.Model):
     '''Модель ингредиентов'''
     name = models.CharField(

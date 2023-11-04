@@ -1,5 +1,6 @@
 from django.contrib import admin
 
-from .models import User
+from .models import Subscribe, User
 
+admin.site.register(Subscribe)
 admin.site.register(User)
