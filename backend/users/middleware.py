@@ -12,7 +12,6 @@ class BlacklistTokenMiddleware:
 
     def __call__(self, request):
         token = request.META.get('HTTP_AUTHORIZATION')
-        print('-------------', type(token))
         if token:
             token = token[7:]
             if BlacklistedToken.objects.filter(token=token).exists():

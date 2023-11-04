@@ -1,7 +1,9 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import LogInView, LogOutView, UserViewSet, UserMeAPIView
+from .views import (
+    SetPasswordView, LogInView, LogOutView, UserViewSet, UserMeAPIView
+)
 
 app_name = 'users'
 
@@ -16,5 +18,6 @@ urlpatterns = [
     ])),
     path('users/me/', UserMeAPIView.as_view(
         {'get': 'retrieve', 'patch': 'partial_update'})),
+    path('users/set_password/', SetPasswordView.as_view()),
     path('', include(router_v1.urls))
 ]

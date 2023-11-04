@@ -2,7 +2,9 @@ from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
-from .constants import USERNAME_ERROR_MESSAGE, USERNAME_REQUIRED_ERROR
+from .constants import (
+    CURRENT_PASSWORD_ERROR, USERNAME_ERROR_MESSAGE, USERNAME_REQUIRED_ERROR
+)
 from .models import BlacklistedToken, User
 
 
@@ -10,6 +12,26 @@ class BlacklistedTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = BlacklistedToken
         fields = ('token',)
+
+
+class SetPasswordSerializer(serializers.ModelSerializer):
+    current_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('current_password', 'new_password')
+
+    def validate_new_password(self, value):
+        password_validation.validate_password(value)
+        return value
+
+    def validate(self, data):
+        print('>>>>>>', self.context)
+        user = self.context['request'].user
+        if not user.check_password(data['current_password']):
+            raise ValidationError(CURRENT_PASSWORD_ERROR)
+        return data
 
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -29,6 +51,10 @@ class SignupSerializer(serializers.ModelSerializer):
         fields = ('username', 'name', 'last_name', 'email', 'password', )
         model = User
 
+    def validate_password(self, value):
+        password_validation.validate_password(value)
+        return value
+
     def validate_username(self, value):
         if not value:
             raise serializers.ValidationError(USERNAME_REQUIRED_ERROR)
@@ -36,10 +62,6 @@ class SignupSerializer(serializers.ModelSerializer):
             raise ValidationError(
                 'Логин слишком короткий. Минимальная длина: 6 символа.'
             )
-        return value
-
-    def validate_password(self, value):
-        password_validation.validate_password(value)
         return value
 
 

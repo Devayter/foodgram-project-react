@@ -7,12 +7,14 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from .constants import (
-    EMAIL_ALREADY_EXIST, LOGGED_OUT, NOT_AUTHORIZER, USERNAME_ALREADY_EXIST
+    EMAIL_ALREADY_EXIST, LOGGED_OUT, NOT_AUTHORIZER, PASSWORD_CHANGED_MESSAGE,
+    USERNAME_ALREADY_EXIST
 )
 from .mixins import UserMeViewSetMixin
 from .serializers import (
-   BlacklistedTokenSerializer, SignupSerializer, TokenSerializer, UserMeSerializer, 
-   UserSerializer
+   SetPasswordSerializer, BlacklistedTokenSerializer, SignupSerializer,
+   TokenSerializer,
+   UserMeSerializer, UserSerializer
 )
 
 User = get_user_model()
@@ -20,13 +22,16 @@ User = get_user_model()
 
 class LogInView(APIView):
     """Вью для получениятокена пользователя"""
+
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
+
         if serializer.is_valid():
             validated_data = serializer.validated_data
             username = validated_data['username']
             password = request.data.get('password')
             user = authenticate(username=username, password=password)
+
             if user is not None:
                 access_token = AccessToken.for_user(user)
                 refresh_token = RefreshToken.for_user(user)
@@ -51,43 +56,49 @@ class LogInView(APIView):
 
 
 class LogOutView(APIView):
+
     def post(self, request):
-        print("<<<<<<<<", request)
         token = request.auth
-        print(">>>>>>>", token)
         serializer = BlacklistedTokenSerializer(data={"token": str(token)})
+
         if serializer.is_valid():
             serializer.save()
-            return Response(status=status.HTTP_205_RESET_CONTENT)
+            return Response(LOGGED_OUT, status=status.HTTP_205_RESET_CONTENT)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                NOT_AUTHORIZER,
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                )
 
 
-        # print('>>>>>>', request.data)
-        # request.auth = None
-        # refresh_token = RefreshToken(request.data.get("refresh_token"))
-        # refresh_token.blacklist()
-          # Устанавливаем значение auth в None
-        return Response({'detail': 'User has been logged out.'}, status=status.HTTP_200_OK)
-        # access_token = request.auth
-        # token = OutstandingToken.objects.filter(token=access_token)
-        # token.blacklist()
-        # return Response({'detail': 'User has been logged out.'}, status=status.HTTP_200_OK)
-        
+class SetPasswordView(APIView):
 
-        # token = request.auth
-        # if token:
-        #     token.delete()
-        #     return Response(LOGGED_OUT, status=status.HTTP_200_OK)
-        # else:
-        #     return Response(NOT_AUTHORIZER, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        serializer = SetPasswordSerializer(
+            data=request.data,
+            context={'request': request}
+            )
+
+        if serializer.is_valid():
+            validated_data = serializer.validated_data
+            user = User.objects.get(username=request.user)
+            password = validated_data['new_password']
+            user.set_password(password)
+            user.save()
+            return Response(
+                PASSWORD_CHANGED_MESSAGE,
+                status=status.HTTP_200_OK
+                )
+
+        return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class UserMeAPIView(UserMeViewSetMixin):
     """Вьюсет пользователя для запроса /users/me/"""
-
     serializer_class = UserMeSerializer
-    # permission_classes = [IsAuthenticated, ]
 
     def get_object(self):
         return self.request.user
@@ -106,13 +117,16 @@ class UserViewSet(viewsets.ModelViewSet):
         last_name = validated_data['last_name']
         email = validated_data['email']
         password = validated_data['password']
+
         if User.objects.filter(username=username).exists():
             return Response(
-                USERNAME_ALREADY_EXIST, status=status.HTTP_400_BAD_REQUEST
+                USERNAME_ALREADY_EXIST,
+                status=status.HTTP_400_BAD_REQUEST
                 )
         elif User.objects.filter(email=email).exists():
             return Response(
-                EMAIL_ALREADY_EXIST, status=status.HTTP_400_BAD_REQUEST
+                EMAIL_ALREADY_EXIST,
+                status=status.HTTP_400_BAD_REQUEST
                 )
         else:
             user = User.objects.create(
@@ -123,6 +137,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 password=password)
             user.set_password(password)
             user.save()
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, **kwargs):
@@ -144,7 +159,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         pk = self.kwargs.get('pk')
-
         user = get_object_or_404(User, pk=pk)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
