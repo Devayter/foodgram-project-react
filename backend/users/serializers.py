@@ -46,10 +46,13 @@ class SignupSerializer(serializers.ModelSerializer):
             'required': USERNAME_REQUIRED_ERROR,
         }
     )
+    password = serializers.CharField(write_only=True)
     email = serializers.EmailField(max_length=250, required=True)
 
     class Meta:
-        fields = ('username', 'name', 'last_name', 'email', 'password', )
+        fields = (
+            'id', 'email', 'username', 'first_name', 'last_name', 'password'
+            )
         model = User
 
     def validate_password(self, value):
@@ -74,7 +77,6 @@ class SubscribeSerializer(serializers.ModelSerializer):
     )
     subscriber = serializers.SlugRelatedField(
         queryset=User.objects.all(),
-        read_only=False,
         slug_field='username'
     )
     validators = [
@@ -109,14 +111,22 @@ class TokenSerializer(serializers.ModelSerializer):
 class UserMeSerializer(serializers.ModelSerializer):
     """Сериализатор пользователя для запроса /users/me/"""
 
+    is_subscribed = serializers.SerializerMethodField()
+
     class Meta:
-        fields = ('username', 'email', 'name', 'last_name',)
+        fields = (
+            'id', 'email', 'username', 'first_name', 'last_name',
+            'is_subscribed'
+                  )
         model = User
+
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        return Subscribe.objects.filter(user=user).exists()
 
 
 class UserSerializer(serializers.ModelSerializer):
     '''Сериализатор пользователя'''
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'email', 'username', 'first_name', 'last_name')
         model = User
-

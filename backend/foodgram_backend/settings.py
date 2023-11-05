@@ -98,13 +98,13 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
    'ACCESS_TOKEN_LIFETIME': timedelta(days=5),
-   'AUTH_HEADER_TYPES': ('Bearer',),
+   'AUTH_HEADER_TYPES': ('Token',),
 }
 
 CELERY_BEAT_SCHEDULE = {
     'delete_expired_blacklisted_tokens': {
         'task': 'yourapp.tasks.delete_expired_blacklisted_tokens',
-        'schedule': timedelta(days=1),  # Запускать каждый день
+        'schedule': timedelta(days=1),
     },
 }
 

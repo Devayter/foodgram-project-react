@@ -1,18 +1,21 @@
 from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status, viewsets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
 
 from .constants import (
     EMAIL_ALREADY_EXISTS, LOGGED_OUT, NOT_AUTHORIZER, NOT_SUBSCRIBED,
-    PASSWORD_CHANGED_MESSAGE, SUBSCRIPTION_ALREADY_EXISTS, UNSUBSCRIBED,
-    USERNAME_ALREADY_EXIST
+    PASSWORD_CHANGED_MESSAGE, SELF_SUBSCRIPTION_ERROR,
+    SUBSCRIPTION_ALREADY_EXISTS, UNSUBSCRIBED, USERNAME_ALREADY_EXIST
 )
 from .mixins import CreateDestroyListMixin, UserMeViewSetMixin
 from .models import Subscribe
+from .pagination import UsersPagination
 from .serializers import (
    SetPasswordSerializer, BlacklistedTokenSerializer, SignupSerializer,
    SubscribeSerializer, TokenSerializer, UserMeSerializer, UserSerializer
@@ -22,11 +25,19 @@ User = get_user_model()
 
 
 class GetSubscribeView(CreateDestroyListMixin):
+    pagination_class = UsersPagination
+    permission_classes = (IsAuthenticated,)
     serializer_class = SubscribeSerializer
 
     def create(self, request, *args, **kwargs):
         user = get_object_or_404(User, id=self.kwargs.get('user_id'))
         subscriber = request.user
+
+        if user == subscriber:
+            return Response(
+                SELF_SUBSCRIPTION_ERROR,
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         if not Subscribe.objects.filter(user=user, subscriber=subscriber):
             subscribe = Subscribe.objects.create(
@@ -58,7 +69,7 @@ class GetSubscribeView(CreateDestroyListMixin):
 
 
 class LogInView(APIView):
-    """Вью для получениятокена пользователя"""
+    """Вью для получения токена пользователя"""
 
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
@@ -66,16 +77,14 @@ class LogInView(APIView):
         if serializer.is_valid():
             validated_data = serializer.validated_data
             email = validated_data['email']
+            username = User.objects.filter(email=email).first()
             password = request.data.get('password')
-            user = authenticate(email=email, password=password)
-
+            user = authenticate(username=username, password=password)
             if user is not None:
-                access_token = AccessToken.for_user(user)
-                refresh_token = RefreshToken.for_user(user)
+                auth_token = AccessToken.for_user(user)
                 return Response(
                     {
-                        'access_token': str(access_token),
-                        'refresh_token': str(refresh_token),
+                        'auth_token': str(auth_token),
                     },
                     status=status.HTTP_200_OK
                 )
@@ -94,13 +103,15 @@ class LogInView(APIView):
 
 class LogOutView(APIView):
 
+    permission_classes = (IsAuthenticated,)
+
     def post(self, request):
         token = request.auth
         serializer = BlacklistedTokenSerializer(data={"token": str(token)})
 
         if serializer.is_valid():
             serializer.save()
-            return Response(LOGGED_OUT, status=status.HTTP_205_RESET_CONTENT)
+            return Response(LOGGED_OUT, status=status.HTTP_204_NO_CONTENT)
         else:
             return Response(
                 NOT_AUTHORIZER,
@@ -109,6 +120,8 @@ class LogOutView(APIView):
 
 
 class SetPasswordView(APIView):
+
+    permission_classes = (IsAuthenticated,)
 
     def post(self, request):
         serializer = SetPasswordSerializer(
@@ -124,7 +137,7 @@ class SetPasswordView(APIView):
             user.save()
             return Response(
                 PASSWORD_CHANGED_MESSAGE,
-                status=status.HTTP_200_OK
+                status=status.HTTP_204_NO_CONTENT
                 )
 
         return Response(
@@ -144,6 +157,8 @@ class SubscribeViewSet(CreateDestroyListMixin):
 
 class UserMeAPIView(UserMeViewSetMixin):
     """Вьюсет пользователя для запроса /users/me/"""
+
+    permission_classes = (IsAuthenticated,)
     serializer_class = UserMeSerializer
 
     def get_object(self):
@@ -151,6 +166,9 @@ class UserMeAPIView(UserMeViewSetMixin):
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """Вьюсет для регистрации"""
+
+    pagination_class = UsersPagination
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -158,10 +176,8 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
-        username = validated_data['username']
-        name = validated_data['name']
-        last_name = validated_data['last_name']
         email = validated_data['email']
+        username = validated_data['username']
         password = validated_data['password']
 
         if User.objects.filter(username=username).exists():
@@ -175,16 +191,10 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
                 )
         else:
-            user = User.objects.create(
-                username=username,
-                name=name,
-                last_name=last_name,
-                email=email,
-                password=password)
-            user.set_password(password)
-            user.save()
+            hashed_password = make_password(password)
+            serializer.save(password=hashed_password)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, *args, **kwargs):
         pk = self.kwargs.get('pk')
