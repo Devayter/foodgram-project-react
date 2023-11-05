@@ -2,6 +2,7 @@ from collections import defaultdict
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -10,8 +11,10 @@ from .constants import (
     NOT_IN_FAVORITES_MESSAGE, NOT_IN_SHOP_CART_MESSAGE,
     SHOP_CART_DELETE_MESSAGE, SHOP_CART_EXISTS_MESSAGE
 )
+from .filters import RecipeFilter
 from .models import Favorites, Ingredient, Recipe, ShoppingCart, Tag
 from .mixins import CreateDestroyListMixin
+from .pagination import RecipesPagination
 from .permissions import IsAdminOrReadOnly
 from .serializers import (
     FavoritesSerializer, IngredientSerializer,
@@ -58,7 +61,6 @@ class FavoritesViewSet(CreateDestroyListMixin):
 
 class IngredientViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    filterset_fields = ('name',)
     permission_classes = (IsAdminOrReadOnly,)
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
@@ -66,6 +68,10 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filterset_class = RecipeFilter
+    pagination_class = RecipesPagination
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = RecipeSerializer
     queryset = Recipe.objects.all()
 

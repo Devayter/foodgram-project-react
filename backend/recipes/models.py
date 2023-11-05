@@ -66,8 +66,8 @@ class Recipe(models.Model):
         blank=False,
         verbose_name='Время приготовления (мин.)'
     )
-    description = models.TextField(
-        blank=False,
+    text = models.TextField(
+        blank=True,
         verbose_name='Описание рецепта'
     )
     image = models.ImageField(
@@ -76,23 +76,25 @@ class Recipe(models.Model):
         verbose_name='Фото блюда')
     ingredients = models.ManyToManyField(
         Ingredient,
+        blank=False,
+        null=False,
         through='RecipeIngredient'
     )
+    name = models.CharField(
+        blank=False,
+        max_length=200,
+        verbose_name='Название рецепта')
     tags = models.ManyToManyField(
         'Tag',
         through='RecipeTag'
     )
-    title = models.CharField(
-        blank=False,
-        max_length=200,
-        verbose_name='Название рецепта')
 
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
     def __str__(self):
-        return f'{self.title} {self.description}'
+        return f'{self.name} {self.text}'
 
 
 class RecipeIngredient(models.Model):

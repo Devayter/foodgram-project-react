@@ -15,3 +15,23 @@ class IsAdminOrReadOnly(BasePermission):
         return (
             request.method in SAFE_METHODS or request.user.role == 'admin'
         )
+
+
+class CustomRecipePermission(BaseException):
+    """
+    Чтение для неавторизованных, POST для юзеров и PUTCH для автора или
+    администратора.
+    """
+
+    def has_permissions(self, request, view):
+        return (
+            request.method in SAFE_METHODS or request.user.is_authenticated
+            or request.user.role == 'admin'
+        )
+
+    def has_object_permissions(self, request, view, obj):
+        return (
+            (request.method in SAFE_METHODS or request.user.role == 'admin')
+            or (request.method == 'POST' and request.user.is_authenticated)
+            or (request.method == 'PUTCH' and obj.author == request.user)
+        )

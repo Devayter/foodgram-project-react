@@ -47,12 +47,18 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.StringRelatedField(
         source='ingredient.measurement_unit',
         )
-    recipe = serializers.PrimaryKeyRelatedField(read_only=True)
+    name = serializers.StringRelatedField(
+        source='ingredient.name'
+    )
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all(),
+        source='ingredient'
+    )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'amount', 'measurement_unit', 'name')
         model = RecipeIngredient
-        read_only_fields = ('measurement_unit',)
+        read_only_fields = ('measurement_unit', 'name')
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -70,6 +76,13 @@ class RecipeTagSerializer(serializers.ModelSerializer):
         model = RecipeTag
 
 
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username', 'first_name', 'last_name',)
+
+
 class RecipeSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
@@ -81,6 +94,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         source='ingredients_used',
         many=True,
     )
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all(),
@@ -91,11 +106,25 @@ class RecipeSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Recipe
 
+    def get_is_favorited(self, obj):
+        if self.context.get('request').user.is_authenticated:
+            user = self.context.get('request').user
+            recipe = obj
+            return Favorites.objects.filter(recipe=recipe, user=user).exists()
+        return False
+
+    def get_is_in_shopping_cart(self, obj):
+        if self.context.get('request').user.is_authenticated:
+            user = self.context.get('request').user
+            recipe = obj
+            return Favorites.objects.filter(recipe=recipe, user=user).exists()
+        return False
+
     def create(self, validated_data):
-        description = validated_data['description']
+        text = validated_data['text']
         ingredients_data = validated_data.pop('ingredients_used')
         tags_data = validated_data.pop('tags')
-        if Recipe.objects.filter(description=description):
+        if Recipe.objects.filter(text=text):
             raise serializers.ValidationError(RECIPE_ALREADY_EXISTS_ERROR)
         recipe = Recipe.objects.create(**validated_data)
         recipe_id = recipe.id
@@ -105,6 +134,39 @@ class RecipeSerializer(serializers.ModelSerializer):
                 **ingredient_data)
         recipe.tags.set(tags_data)
         return recipe
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name')
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get(
+            'cooking_time',
+            instance.cooking_time
+            )
+        instance.image = validated_data.get('image', instance.image)
+
+        instance.ingredients.clear()
+        ingredients_data = validated_data.get('ingredients_used')
+        for ingredient_data in ingredients_data:
+            RecipeIngredient.objects.get_or_create(
+                recipe_id=instance.id, **ingredient_data
+                )
+
+        instance.tags.clear()
+        tags_data = validated_data.get('tags')
+        for tag_data in tags_data:
+            RecipeTag.objects.get_or_create(
+                recipe_id=instance.id, tag=tag_data
+                )
+
+        instance.save()
+        return instance
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['author'] = UserSerializer(instance.author).data
+        ret['tags'] = TagSerializer(instance.tags, many=True).data
+
+        return ret
 
 
 class FavoritesSerializer(serializers.ModelSerializer):
