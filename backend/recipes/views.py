@@ -1,6 +1,7 @@
 from collections import defaultdict
 from django.http import HttpResponse
-from rest_framework import status, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -11,6 +12,7 @@ from .constants import (
 )
 from .models import Favorites, Ingredient, Recipe, ShoppingCart, Tag
 from .mixins import CreateDestroyListMixin
+from .permissions import IsAdminOrReadOnly
 from .serializers import (
     FavoritesSerializer, IngredientSerializer,
     RecipeSerializer, ShoppingCartSerializer, TagSerializer
@@ -55,8 +57,12 @@ class FavoritesViewSet(CreateDestroyListMixin):
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filterset_fields = ('name',)
+    permission_classes = (IsAdminOrReadOnly,)
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
+    search_fields = ('^name', 'name')
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -109,19 +115,21 @@ class ShoppingCartDownLoadView(APIView):
 
     def get(self, request):
         shopping_cart_dict = defaultdict(
-            lambda: {'amount': 0, 'measurement': ''}
+            lambda: {'amount': 0, 'measurement_unit': ''}
             )
         user = self.request.user
         shopping_cart = ShoppingCart.objects.filter(user=user)
         for ingredients in shopping_cart:
             for ingredient in ingredients.recipe.ingredients_used.all():
                 amount = ingredient.amount
-                measurement = ingredient.ingredient.measurement
+                measurement_unit = ingredient.ingredient.measurement_unit
                 ingredient_key = ingredient.ingredient.name
                 shopping_cart_dict[ingredient_key]['amount'] += amount
-                shopping_cart_dict[ingredient_key]['measurement'] = measurement
+                shopping_cart_dict[ingredient_key]['measurement_unit'] = (
+                    measurement_unit
+                )
         shopping_list = "\n".join(
-            [f"{ingredient} {data['amount']} {data['measurement']}"
+            [f"{ingredient} {data['amount']} {data['measurement_unit']}"
              for ingredient, data in shopping_cart_dict.items()]
             )
         response = HttpResponse(shopping_list, content_type='text/plain')
@@ -134,3 +142,4 @@ class ShoppingCartDownLoadView(APIView):
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    permission_classes = (IsAdminOrReadOnly,)

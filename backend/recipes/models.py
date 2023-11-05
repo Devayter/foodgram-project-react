@@ -39,7 +39,7 @@ class Ingredient(models.Model):
         unique=True,
         verbose_name='Наименование ингредиента'
     )
-    measurement = models.CharField(
+    measurement_unit = models.CharField(
         blank=False,
         max_length=15,
         verbose_name='Единица измерения'
@@ -109,7 +109,10 @@ class RecipeIngredient(models.Model):
     )
 
     def __str__(self):
-        return f'{self.amount} {self.ingredient.measurement} {self.ingredient}'
+        return (
+            f'{self.amount} {self.ingredient.measurement_unit}'
+            '{self.ingredient}'
+        )
 
 
 class RecipeTag(models.Model):

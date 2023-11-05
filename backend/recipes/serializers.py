@@ -44,15 +44,15 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     amount = serializers.IntegerField(),
-    measurement = serializers.StringRelatedField(
-        source='ingredient.measurement',
+    measurement_unit = serializers.StringRelatedField(
+        source='ingredient.measurement_unit',
         )
     recipe = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         fields = '__all__'
         model = RecipeIngredient
-        read_only_fields = ('measurement',)
+        read_only_fields = ('measurement_unit',)
 
 
 class TagSerializer(serializers.ModelSerializer):
