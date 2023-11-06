@@ -79,13 +79,13 @@ class TagSerializer(serializers.ModelSerializer):
 
 class RecipeTagSerializer(serializers.ModelSerializer):
     """Сериализатор промежуточной модели рецептов и тегов"""
-
     class Meta:
         fields = '__all__'
         model = RecipeTag
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор рецептов"""
     author = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
         queryset=User.objects.all(),
@@ -110,7 +110,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         if self.context.get('request').user.is_authenticated:
-            user = self.context.get('request').user 
+            user = self.context.get('request').user
             return Favorites.objects.filter(recipe=obj, user=user).exists()
         return False
 
@@ -144,20 +144,23 @@ class RecipeSerializer(serializers.ModelSerializer):
     def validate_tags(self, tags):
         if not tags:
             raise ValidationError(EMPTY_TAGS_ERROR)
+
         tags_list = []
         for tag in tags:
             if tag in tags_list:
                 raise ValidationError(DOUBLE_TAG_ERROR)
             tags_list.append(tag)
-        return tags
 
+        return tags
 
     def create(self, validated_data):
         text = validated_data['text']
         ingredients_data = validated_data.pop('ingredients_used')
         tags_data = validated_data.pop('tags')
+
         if Recipe.objects.filter(text=text):
             raise ValidationError(RECIPE_ALREADY_EXISTS_ERROR)
+
         recipe = Recipe.objects.create(**validated_data)
         recipe_id = recipe.id
         for ingredient_data in ingredients_data:
@@ -206,6 +209,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class FavoritesSerializer(serializers.ModelSerializer):
+    """Сериализатор Избранного"""
     recipe = RecipeSerializer(write_only=True)
     user = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
@@ -217,6 +221,7 @@ class FavoritesSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(source='recipe.name')
     image = Base64ImageField(source='recipe.image')
     cooking_time = serializers.ReadOnlyField(source='recipe.cooking_time')
+
     validators = [
         UniqueTogetherValidator(
             queryset=Favorites.objects.all(),
@@ -231,6 +236,7 @@ class FavoritesSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
+    """Сериализатор списка покупок"""
     recipe = RecipeSerializer(write_only=True)
     user = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),

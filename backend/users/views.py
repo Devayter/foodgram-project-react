@@ -8,8 +8,8 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
 from .constants import (
-    EMAIL_ALREADY_EXISTS, LOGGED_OUT, NOT_AUTHORIZER, NOT_SUBSCRIBED,
-    PASSWORD_CHANGED_MESSAGE, SELF_SUBSCRIPTION_ERROR,
+    EMAIL_ALREADY_EXISTS, INVALID_PASSWORD, LOGGED_OUT, NOT_AUTHORIZER,
+    NOT_SUBSCRIBED, PASSWORD_CHANGED_MESSAGE, SELF_SUBSCRIPTION_ERROR,
     SUBSCRIPTION_ALREADY_EXISTS, UNSUBSCRIBED, USERNAME_ALREADY_EXIST
 )
 from .mixins import CreateDestroyListMixin, UserMeViewSetMixin
@@ -24,6 +24,7 @@ User = get_user_model()
 
 
 class GetSubscribeView(CreateDestroyListMixin):
+    """Вью для создания подпски"""
     pagination_class = UsersPagination
     permission_classes = (IsAuthenticated,)
     serializer_class = SubscribeSerializer
@@ -69,7 +70,6 @@ class GetSubscribeView(CreateDestroyListMixin):
 
 class LogInView(APIView):
     """Вью для получения токена пользователя"""
-
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
 
@@ -79,6 +79,7 @@ class LogInView(APIView):
             username = User.objects.filter(email=email).first()
             password = request.data.get('password')
             user = authenticate(username=username, password=password)
+
             if user is not None:
                 auth_token = AccessToken.for_user(user)
                 return Response(
@@ -89,7 +90,7 @@ class LogInView(APIView):
                 )
             else:
                 return Response(
-                    {'message': 'Неправильная электронная почта или пароль'},
+                    {INVALID_PASSWORD},
                     status=status.HTTP_404_NOT_FOUND
                 )
 
@@ -101,7 +102,7 @@ class LogInView(APIView):
 
 
 class LogOutView(APIView):
-
+    """Вью для выхода пользователя и добавления токена в черный список"""
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
@@ -119,7 +120,7 @@ class LogOutView(APIView):
 
 
 class SetPasswordView(APIView):
-
+    """Вью для смены пароля"""
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
@@ -146,6 +147,7 @@ class SetPasswordView(APIView):
 
 
 class SubscribeViewSet(CreateDestroyListMixin):
+    """Вью для отображения списка подписок"""
     pagination_class = UsersPagination
     serializer_class = SubscribeSerializer
 

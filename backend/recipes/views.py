@@ -2,9 +2,7 @@ from collections import defaultdict
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
-from rest_framework.permissions import (
-    IsAuthenticatedOrReadOnly, IsAuthenticated
-    )
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -27,6 +25,7 @@ from .serializers import (
 
 
 class FavoritesViewSet(CreateDestroyListMixin):
+    """Вьюсет для создания, удаления и отображения избранного"""
     permission_classes = (IsAuthenticated,)
     serializer_class = FavoritesSerializer
 
@@ -73,6 +72,7 @@ class FavoritesViewSet(CreateDestroyListMixin):
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
+    """Вьюест для ингредиентов"""
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     permission_classes = (IsAdminOrReadOnly,)
     serializer_class = IngredientSerializer
@@ -81,6 +81,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    """Вьюсет для работы с рецептами"""
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_class = RecipeFilter
     pagination_class = RecipesPagination
@@ -90,11 +91,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class ShoppingCartViewSet(CreateDestroyListMixin):
+    """
+    Вьюсет для добавления и удаления рецептов и отображения списка
+    покупок.
+    """
     permission_classes = (IsAuthenticated,)
     serializer_class = ShoppingCartSerializer
 
     def create(self, request, *args, **kwargs):
-
         user = self.request.user
 
         try:
@@ -120,7 +124,6 @@ class ShoppingCartViewSet(CreateDestroyListMixin):
     def delete(self, request, *args, **kwargs):
         recipe = self.get_recipe()
         user = request.user
-
         try:
             recipe = ShoppingCart.objects.get(recipe=recipe, user=user)
             recipe.delete()
@@ -137,8 +140,10 @@ class ShoppingCartViewSet(CreateDestroyListMixin):
 
 
 class ShoppingCartDownLoadView(APIView):
-    '''Класс для загрузки списка покупок с суммированием повторяющихся
-      ингредиентов'''
+    """
+    Класс для загрузки списка покупок с суммированием повторяющихся
+      ингредиентов.
+    """
     permission_classes = (IsAuthorOnly,)
     serializer_class = ShoppingCartSerializer
     queryset = ShoppingCart.objects.all()
@@ -149,6 +154,7 @@ class ShoppingCartDownLoadView(APIView):
             )
         user = self.request.user
         shopping_cart = ShoppingCart.objects.filter(user=user)
+
         for ingredients in shopping_cart:
             for ingredient in ingredients.recipe.ingredients_used.all():
                 amount = ingredient.amount
@@ -162,6 +168,7 @@ class ShoppingCartDownLoadView(APIView):
             [f"{ingredient} {data['amount']} {data['measurement_unit']}"
              for ingredient, data in shopping_cart_dict.items()]
             )
+
         response = HttpResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = (
             'attachment; filename="shopping_list.txt"'
@@ -170,6 +177,7 @@ class ShoppingCartDownLoadView(APIView):
 
 
 class TagViewSet(viewsets.ModelViewSet):
+    """Вьюсет для тегов"""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (IsAdminOrReadOnly,)

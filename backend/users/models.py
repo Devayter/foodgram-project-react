@@ -11,6 +11,7 @@ ROLES = (
 
 
 class BlacklistedToken(models.Model):
+    """Модель черного списка токенов доступа"""
     token = models.CharField(max_length=500)
     blacklisted_at = models.DateTimeField(default=timezone.now)
 

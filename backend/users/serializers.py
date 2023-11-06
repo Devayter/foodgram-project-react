@@ -12,12 +12,14 @@ from .models import BlacklistedToken, User, Subscribe
 
 
 class BlacklistedTokenSerializer(serializers.ModelSerializer):
+    """Сериализатор модели черного списка токенов"""
     class Meta:
         model = BlacklistedToken
         fields = ('token',)
 
 
 class SetPasswordSerializer(serializers.ModelSerializer):
+    """Сериализатор смены пароля"""
     current_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
 
@@ -76,7 +78,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
-
+    """Сериализатор подписок"""
     username = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
         queryset=User.objects.all(),

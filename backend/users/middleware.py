@@ -7,6 +7,7 @@ from .models import BlacklistedToken
 
 
 class BlacklistTokenMiddleware:
+    """Middleware для проверки токена на черный список"""
     def __init__(self, get_response):
         self.get_response = get_response
 
