@@ -14,7 +14,7 @@ router_v1.register(r'favorites', FavoritesViewSet, basename='favorites')
 router_v1.register(r'ingredients', IngredientViewSet, basename='ingredients')
 router_v1.register(r'recipes', RecipeViewSet, basename='recipes')
 router_v1.register(
-    r'recipes/(?P<recipe_id>\d+)/favorites',
+    r'recipes/(?P<recipe_id>\d+)/favorite',
     FavoritesViewSet,
     basename='add_favorite_recipe'
 )

@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from recipes.serializers import RecipeSerializer
+from recipes.models import Recipe
 from .constants import (
     CURRENT_PASSWORD_ERROR, USERNAME_ERROR_MESSAGE, USERNAME_REQUIRED_ERROR,
     USERNAME_SHORT_ERROR
@@ -52,7 +52,7 @@ class SignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = (
-            'id', 'email', 'username', 'first_name', 'last_name', 'password'
+            'id', 'username', 'first_name', 'last_name', 'email', 'password'
             )
         model = User
 
@@ -68,32 +68,66 @@ class SignupSerializer(serializers.ModelSerializer):
         return value
 
 
+class UserSerializer(serializers.ModelSerializer):
+    '''Сериализатор пользователя'''
+    class Meta:
+        fields = ('id', 'email', 'username', 'first_name', 'last_name')
+        model = User
+
+
 class SubscribeSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(
+
+    username = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
         queryset=User.objects.all(),
         slug_field='username'
     )
+    recipes_count = serializers.SerializerMethodField()
     subscriber = serializers.SlugRelatedField(
         queryset=User.objects.all(),
-        slug_field='username'
+        slug_field='username',
+        write_only=True
     )
+    id = serializers.ReadOnlyField(source='user.id')
+    first_name = serializers.ReadOnlyField(source='user.first_name')
+    last_name = serializers.ReadOnlyField(source='user.last_name')
+    email = serializers.ReadOnlyField(source='user.email')
+    is_subscribed = serializers.SerializerMethodField()
     validators = [
         UniqueTogetherValidator(
             queryset=Subscribe.objects.all(),
-            fields=('user', 'subscriber')
+            fields=('user', 'subscriber',)
         )
     ]
 
     class Meta:
-        fields = ('user', 'subscriber',)
+        fields = (
+            'id', 'username', 'first_name', 'last_name', 'email', 'subscriber',
+            'is_subscribed', 'recipes_count'
+            )
         model = Subscribe
+
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        return Subscribe.objects.filter(subscriber=user).exists()
+
+    def get_recipes_count(self, obj):
+        user_id = self.context['request'].resolver_match.kwargs.get('user_id')
+        return Recipe.objects.filter(author_id=user_id).count()
 
     def to_representation(self, instance):
         data = super(SubscribeSerializer, self).to_representation(instance)
-        data['recipes'] = RecipeSerializer(
-            instance.user.recipes, many=True
-            ).data
+        user_id = instance.user.id
+        recipes_limit = self.context['request'].query_params.get(
+            'recipes_limit'
+            )
+
+        recipes = Recipe.objects.filter(author_id=user_id)
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
+
+        recipes = recipes.values('id', 'name', 'image', 'cooking_time')
+        data['recipes'] = recipes
         return data
 
 
@@ -114,7 +148,7 @@ class UserMeSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = (
-            'id', 'email', 'username', 'first_name', 'last_name',
+            'id', 'username', 'first_name', 'last_name', 'email',
             'is_subscribed'
                   )
         model = User
@@ -122,10 +156,3 @@ class UserMeSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
         return Subscribe.objects.filter(user=user).exists()
-
-
-class UserSerializer(serializers.ModelSerializer):
-    '''Сериализатор пользователя'''
-    class Meta:
-        fields = ('id', 'email', 'username', 'first_name', 'last_name')
-        model = User

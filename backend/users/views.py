@@ -146,6 +146,7 @@ class SetPasswordView(APIView):
 
 
 class SubscribeViewSet(CreateDestroyListMixin):
+    pagination_class = UsersPagination
     serializer_class = SubscribeSerializer
 
     def get_queryset(self):

@@ -2,20 +2,24 @@ from collections import defaultdict
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAuthenticatedOrReadOnly, IsAuthenticated
+    )
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .constants import (
     FAVORITES_DELETE_MESSAGE, FAVORITES_EXISTS_MESSAGE,
     NOT_IN_FAVORITES_MESSAGE, NOT_IN_SHOP_CART_MESSAGE,
-    SHOP_CART_DELETE_MESSAGE, SHOP_CART_EXISTS_MESSAGE
+    RECIPE_DOES_NOT_EXIST, SHOP_CART_DELETE_MESSAGE, SHOP_CART_EXISTS_MESSAGE
 )
 from .filters import RecipeFilter
 from .models import Favorites, Ingredient, Recipe, ShoppingCart, Tag
 from .mixins import CreateDestroyListMixin
 from .pagination import RecipesPagination
-from .permissions import CustomRecipePermission, IsAdminOrReadOnly
+from .permissions import (
+    CustomRecipePermission, IsAdminOrReadOnly, IsAuthorOnly
+)
 from .serializers import (
     FavoritesSerializer, IngredientSerializer,
     RecipeSerializer, ShoppingCartSerializer, TagSerializer
@@ -23,12 +27,21 @@ from .serializers import (
 
 
 class FavoritesViewSet(CreateDestroyListMixin):
+    permission_classes = (IsAuthenticated,)
     serializer_class = FavoritesSerializer
 
     def create(self, request, *args, **kwargs):
-        recipe = self.get_recipe()
         user = self.request.user
 
+        try:
+            Recipe.objects.get(id=self.kwargs.get('recipe_id'))
+        except Recipe.DoesNotExist:
+            return Response(
+                RECIPE_DOES_NOT_EXIST,
+                status=status.HTTP_400_BAD_REQUEST
+                )
+
+        recipe = Recipe.objects.get(id=self.kwargs.get('recipe_id'))
         if not Favorites.objects.filter(recipe=recipe, user=user):
             favorites = Favorites.objects.create(recipe=recipe, user=user)
             serializer = self.get_serializer(favorites)
@@ -52,7 +65,7 @@ class FavoritesViewSet(CreateDestroyListMixin):
                 )
         except Favorites.DoesNotExist:
             return Response(
-                NOT_IN_FAVORITES_MESSAGE, status=status.HTTP_400_BAD_REQUEST
+                NOT_IN_FAVORITES_MESSAGE, status=status.HTTP_404_NOT_FOUND
                 )
 
     def get_queryset(self):
@@ -64,7 +77,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
-    search_fields = ('^name', 'name')
+    search_fields = ('^name')
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -77,12 +90,22 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class ShoppingCartViewSet(CreateDestroyListMixin):
+    permission_classes = (IsAuthenticated,)
     serializer_class = ShoppingCartSerializer
 
     def create(self, request, *args, **kwargs):
-        recipe = self.get_recipe()
+
         user = self.request.user
 
+        try:
+            Recipe.objects.get(id=self.kwargs.get('recipe_id'))
+        except Recipe.DoesNotExist:
+            return Response(
+                RECIPE_DOES_NOT_EXIST,
+                status=status.HTTP_400_BAD_REQUEST
+                )
+
+        recipe = Recipe.objects.get(id=self.kwargs.get('recipe_id'))
         if not ShoppingCart.objects.filter(recipe=recipe, user=user):
             shopping_cart = ShoppingCart.objects.create(
                 recipe=recipe, user=user
@@ -99,8 +122,8 @@ class ShoppingCartViewSet(CreateDestroyListMixin):
         user = request.user
 
         try:
-            favorite = ShoppingCart.objects.get(recipe=recipe, user=user)
-            favorite.delete()
+            recipe = ShoppingCart.objects.get(recipe=recipe, user=user)
+            recipe.delete()
             return Response(
                 SHOP_CART_DELETE_MESSAGE, status=status.HTTP_204_NO_CONTENT
                 )
@@ -116,6 +139,7 @@ class ShoppingCartViewSet(CreateDestroyListMixin):
 class ShoppingCartDownLoadView(APIView):
     '''Класс для загрузки списка покупок с суммированием повторяющихся
       ингредиентов'''
+    permission_classes = (IsAuthorOnly,)
     serializer_class = ShoppingCartSerializer
     queryset = ShoppingCart.objects.all()
 

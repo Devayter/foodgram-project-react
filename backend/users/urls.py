@@ -20,11 +20,15 @@ urlpatterns = [
     ])),
     path('users/', include([
         path('me/', UserMeAPIView.as_view(
-            {'get': 'retrieve', 'patch': 'partial_update'})),
+            {'get': 'retrieve', 'patch': 'partial_update'}
+            )),
         path('set_password/', SetPasswordView.as_view()),
         re_path(r'(?P<user_id>\d+)/subscribe', GetSubscribeView.as_view(
             {'post': 'create', 'delete': 'destroy'}
-        ))
+            )),
+        path('subscriptions/', SubscribeViewSet.as_view(
+            {'get': 'list'}
+        ), name='subscribes')
     ])),
     path('', include(router_v1.urls))
 ]

@@ -1,6 +1,7 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
+from rest_framework.response import Response
 
+from .constants import RECIPE_DOES_NOT_EXIST
 from .models import Recipe
 
 
@@ -13,4 +14,7 @@ class CreateDestroyListMixin(
     """Базовый класс для FavoritesViewSet и ShoppingCartViewSet"""
 
     def get_recipe(self):
-        return get_object_or_404(Recipe, id=self.kwargs.get('recipe_id'))
+        try:
+            return Recipe.objects.get(id=self.kwargs.get('recipe_id'))
+        except Recipe.DoesNotExist:
+            Response(RECIPE_DOES_NOT_EXIST, status=status.HTTP_400_BAD_REQUEST)

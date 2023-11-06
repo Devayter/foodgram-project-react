@@ -48,12 +48,6 @@ class Subscribe(models.Model):
 
 class User(AbstractUser):
     '''Модель пользователя'''
-    email = models.EmailField(
-        blank=False,
-        max_length=300,
-        unique=True,
-        verbose_name='Электронная почта'
-    )
     username = models.CharField(
         blank=False,
         max_length=150,
@@ -79,6 +73,12 @@ class User(AbstractUser):
         blank=False,
         max_length=150,
         verbose_name='Фамилия пользователя'
+    )
+    email = models.EmailField(
+        blank=False,
+        max_length=300,
+        unique=True,
+        verbose_name='Электронная почта'
     )
     role = models.CharField(
         choices=ROLES,
