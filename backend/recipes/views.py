@@ -15,7 +15,7 @@ from .filters import RecipeFilter
 from .models import Favorites, Ingredient, Recipe, ShoppingCart, Tag
 from .mixins import CreateDestroyListMixin
 from .pagination import RecipesPagination
-from .permissions import IsAdminOrReadOnly
+from .permissions import CustomRecipePermission, IsAdminOrReadOnly
 from .serializers import (
     FavoritesSerializer, IngredientSerializer,
     RecipeSerializer, ShoppingCartSerializer, TagSerializer
@@ -71,7 +71,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_class = RecipeFilter
     pagination_class = RecipesPagination
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (CustomRecipePermission,)
     serializer_class = RecipeSerializer
     queryset = Recipe.objects.all()
 

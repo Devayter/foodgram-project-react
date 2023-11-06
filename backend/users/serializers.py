@@ -5,7 +5,8 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.serializers import RecipeSerializer
 from .constants import (
-    CURRENT_PASSWORD_ERROR, USERNAME_ERROR_MESSAGE, USERNAME_REQUIRED_ERROR
+    CURRENT_PASSWORD_ERROR, USERNAME_ERROR_MESSAGE, USERNAME_REQUIRED_ERROR,
+    USERNAME_SHORT_ERROR
 )
 from .models import BlacklistedToken, User, Subscribe
 
@@ -63,9 +64,7 @@ class SignupSerializer(serializers.ModelSerializer):
         if not value:
             raise serializers.ValidationError(USERNAME_REQUIRED_ERROR)
         elif len(value) < 4:
-            raise ValidationError(
-                'Логин слишком короткий. Минимальная длина: 4 символа.'
-            )
+            raise ValidationError(USERNAME_SHORT_ERROR)
         return value
 
 

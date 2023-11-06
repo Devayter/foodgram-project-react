@@ -67,18 +67,17 @@ class Recipe(models.Model):
         verbose_name='Время приготовления (мин.)'
     )
     text = models.TextField(
-        blank=True,
+        blank=False,
         verbose_name='Описание рецепта'
     )
     image = models.ImageField(
         blank=False,
+        null=False,
         upload_to='recipes/images',
         verbose_name='Фото блюда')
     ingredients = models.ManyToManyField(
         Ingredient,
-        blank=False,
-        null=False,
-        through='RecipeIngredient'
+        through='RecipeIngredient',
     )
     name = models.CharField(
         blank=False,
@@ -99,7 +98,11 @@ class Recipe(models.Model):
 
 class RecipeIngredient(models.Model):
     '''Промежуточная таблица ингредиентов для рецепта'''
-    amount = models.IntegerField(blank=False, verbose_name='количество')
+    amount = models.IntegerField(
+        blank=False,
+        null=False,
+        verbose_name='количество'
+        )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE
