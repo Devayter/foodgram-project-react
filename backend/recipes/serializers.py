@@ -51,7 +51,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     amount = serializers.IntegerField(),
     measurement_unit = serializers.StringRelatedField(
         source='ingredient.measurement_unit',
-        )
+    )
     name = serializers.StringRelatedField(
         source='ingredient.name'
     )
@@ -177,7 +177,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.cooking_time = validated_data.get(
             'cooking_time',
             instance.cooking_time
-            )
+        )
         instance.image = validated_data.get('image', instance.image)
 
         ingredients_data = validated_data.get('ingredients_used')
@@ -186,7 +186,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         for ingredient_data in ingredients_data:
             RecipeIngredient.objects.get_or_create(
                 recipe_id=instance.id, **ingredient_data
-                )
+            )
 
         tags_data = validated_data.get('tags')
         self.validate_tags(tags_data)
@@ -194,7 +194,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         for tag_data in tags_data:
             RecipeTag.objects.get_or_create(
                 recipe_id=instance.id, tag=tag_data
-                )
+            )
 
         instance.save()
         return instance

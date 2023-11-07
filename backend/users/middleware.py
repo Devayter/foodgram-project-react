@@ -19,12 +19,11 @@ class BlacklistTokenMiddleware:
                 response = Response(
                     {'detail': INVALID_TOKEN},
                     status=status.HTTP_401_UNAUTHORIZED
-                    )
+                )
                 response.accepted_renderer = JSONRenderer()
                 response.accepted_media_type = "application/json"
                 response.renderer_context = {}
                 response.render()
                 return response
 
-        response = self.get_response(request)
-        return response
+        return self.get_response(request)

@@ -54,7 +54,7 @@ class SignupSerializer(serializers.ModelSerializer):
     class Meta:
         fields = (
             'id', 'username', 'first_name', 'last_name', 'email', 'password'
-            )
+        )
         model = User
 
     def validate_password(self, value):
@@ -105,7 +105,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'username', 'first_name', 'last_name', 'email', 'subscriber',
             'is_subscribed', 'recipes_count'
-            )
+        )
         model = Subscribe
 
     def get_is_subscribed(self, obj):
@@ -121,7 +121,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
         user_id = instance.user.id
         recipes_limit = self.context['request'].query_params.get(
             'recipes_limit'
-            )
+        )
 
         recipes = Recipe.objects.filter(author_id=user_id)
         if recipes_limit:
@@ -151,7 +151,7 @@ class UserMeSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'username', 'first_name', 'last_name', 'email',
             'is_subscribed'
-                  )
+        )
         model = User
 
     def get_is_subscribed(self, obj):

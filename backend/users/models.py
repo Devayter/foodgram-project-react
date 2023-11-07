@@ -58,7 +58,7 @@ class User(AbstractUser):
                 message=(
                     'Неправильный формат поля'
                     'Допустимы только буквы, цифры и символы @ . + -'
-                    ),
+                ),
                 code='invalid_field',
             ),
         ],

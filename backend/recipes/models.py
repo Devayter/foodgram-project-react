@@ -43,7 +43,7 @@ class Ingredient(models.Model):
         blank=False,
         max_length=15,
         verbose_name='Единица измерения'
-        )
+    )
 
     class Meta:
         verbose_name = 'Ингредиент'
@@ -102,7 +102,7 @@ class RecipeIngredient(models.Model):
         blank=False,
         null=False,
         verbose_name='количество'
-        )
+    )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE

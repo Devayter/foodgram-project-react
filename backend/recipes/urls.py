@@ -23,7 +23,7 @@ router_v1.register(
 )
 router_v1.register(
     r'shopping_cart', ShoppingCartViewSet, basename='shopping_cart'
-    )
+)
 router_v1.register(r'tags', TagViewSet, basename='tags')
 
 urlpatterns = [

@@ -36,7 +36,7 @@ class FavoritesViewSet(CreateDestroyListMixin):
             return Response(
                 RECIPE_DOES_NOT_EXIST,
                 status=status.HTTP_400_BAD_REQUEST
-                )
+            )
 
         recipe = Recipe.objects.get(id=self.kwargs.get('recipe_id'))
         if not Favorites.objects.filter(recipe=recipe, user=user):
@@ -47,7 +47,7 @@ class FavoritesViewSet(CreateDestroyListMixin):
             )
         return Response(
             FAVORITES_EXISTS_MESSAGE, status=status.HTTP_400_BAD_REQUEST
-            )
+        )
 
     def delete(self, request, *args, **kwargs):
         recipe = self.get_recipe()
@@ -58,11 +58,11 @@ class FavoritesViewSet(CreateDestroyListMixin):
             favorite.delete()
             return Response(
                 FAVORITES_DELETE_MESSAGE, status=status.HTTP_204_NO_CONTENT
-                )
+            )
         except Favorites.DoesNotExist:
             return Response(
                 NOT_IN_FAVORITES_MESSAGE, status=status.HTTP_404_NOT_FOUND
-                )
+            )
 
     def get_queryset(self):
         return Favorites.objects.filter(user=self.request.user)
@@ -104,18 +104,18 @@ class ShoppingCartViewSet(CreateDestroyListMixin):
             return Response(
                 RECIPE_DOES_NOT_EXIST,
                 status=status.HTTP_400_BAD_REQUEST
-                )
+            )
 
         recipe = Recipe.objects.get(id=self.kwargs.get('recipe_id'))
         if not ShoppingCart.objects.filter(recipe=recipe, user=user):
             shopping_cart = ShoppingCart.objects.create(
                 recipe=recipe, user=user
-                )
+            )
             serializer = self.get_serializer(shopping_cart)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(
             SHOP_CART_EXISTS_MESSAGE, status=status.HTTP_400_BAD_REQUEST
-            )
+        )
 
     def delete(self, request, *args, **kwargs):
         recipe = self.get_recipe()
@@ -125,11 +125,11 @@ class ShoppingCartViewSet(CreateDestroyListMixin):
             recipe.delete()
             return Response(
                 SHOP_CART_DELETE_MESSAGE, status=status.HTTP_204_NO_CONTENT
-                )
+            )
         except ShoppingCart.DoesNotExist:
             return Response(
                 NOT_IN_SHOP_CART_MESSAGE, status=status.HTTP_400_BAD_REQUEST
-                )
+            )
 
     def get_queryset(self):
         return ShoppingCart.objects.filter(user=self.request.user)
@@ -147,7 +147,7 @@ class ShoppingCartDownLoadView(APIView):
     def get(self, request):
         shopping_cart_dict = defaultdict(
             lambda: {'amount': 0, 'measurement_unit': ''}
-            )
+        )
         user = self.request.user
         shopping_cart = ShoppingCart.objects.filter(user=user)
 
@@ -163,7 +163,7 @@ class ShoppingCartDownLoadView(APIView):
         shopping_list = "\n".join(
             [f"{ingredient} {data['amount']} {data['measurement_unit']}"
              for ingredient, data in shopping_cart_dict.items()]
-            )
+        )
 
         response = HttpResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = (
