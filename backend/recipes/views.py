@@ -47,10 +47,9 @@ class FavoritesViewSet(CreateDestroyListMixin):
             return Response(
                 serializer.data, status=status.HTTP_201_CREATED
             )
-        else:
-            return Response(
-                FAVORITES_EXISTS_MESSAGE, status=status.HTTP_400_BAD_REQUEST
-                )
+        return Response(
+            FAVORITES_EXISTS_MESSAGE, status=status.HTTP_400_BAD_REQUEST
+            )
 
     def delete(self, request, *args, **kwargs):
         recipe = self.get_recipe()
@@ -116,10 +115,9 @@ class ShoppingCartViewSet(CreateDestroyListMixin):
                 )
             serializer = self.get_serializer(shopping_cart)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(
-                SHOP_CART_EXISTS_MESSAGE, status=status.HTTP_400_BAD_REQUEST
-                )
+        return Response(
+            SHOP_CART_EXISTS_MESSAGE, status=status.HTTP_400_BAD_REQUEST
+            )
 
     def delete(self, request, *args, **kwargs):
         recipe = self.get_recipe()

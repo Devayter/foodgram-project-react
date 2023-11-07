@@ -65,7 +65,7 @@ class SignupSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
         if not value:
             raise serializers.ValidationError(USERNAME_REQUIRED_ERROR)
-        elif len(value) < 4:
+        if len(value) < 4:
             raise ValidationError(USERNAME_SHORT_ERROR)
         return value
 

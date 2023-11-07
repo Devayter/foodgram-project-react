@@ -48,11 +48,10 @@ class GetSubscribeView(CreateDestroyListMixin):
             return Response(
                 serializer.data, status=status.HTTP_201_CREATED
             )
-        else:
-            return Response(
-                SUBSCRIPTION_ALREADY_EXISTS,
-                status=status.HTTP_400_BAD_REQUEST
-                )
+        return Response(
+            SUBSCRIPTION_ALREADY_EXISTS,
+            status=status.HTTP_400_BAD_REQUEST
+            )
 
     def destroy(self, request, *args, **kwargs):
         user = get_object_or_404(User, id=self.kwargs.get('user_id'))
@@ -88,17 +87,15 @@ class LogInView(APIView):
                     },
                     status=status.HTTP_200_OK
                 )
-            else:
-                return Response(
-                    {INVALID_PASSWORD},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-
-        else:
             return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
+                {INVALID_PASSWORD},
+                status=status.HTTP_404_NOT_FOUND
             )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class LogOutView(APIView):
@@ -112,11 +109,10 @@ class LogOutView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(LOGGED_OUT, status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(
-                NOT_AUTHORIZER,
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
-                )
+        return Response(
+            NOT_AUTHORIZER,
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class SetPasswordView(APIView):
@@ -187,14 +183,14 @@ class UserViewSet(viewsets.ModelViewSet):
                 USERNAME_ALREADY_EXIST,
                 status=status.HTTP_400_BAD_REQUEST
                 )
-        elif User.objects.filter(email=email).exists():
+        if User.objects.filter(email=email).exists():
             return Response(
                 EMAIL_ALREADY_EXISTS,
                 status=status.HTTP_400_BAD_REQUEST
                 )
-        else:
-            hashed_password = make_password(password)
-            serializer.save(password=hashed_password)
+
+        hashed_password = make_password(password)
+        serializer.save(password=hashed_password)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
