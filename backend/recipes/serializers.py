@@ -1,20 +1,19 @@
 import base64
+
 import webcolors
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 
-from .constants import (
-    EMPTY_INGREDIENTS_ERROR, EMPTY_TAGS_ERROR, DOUBLE_INGREDIENT_ERROR,
-    DOUBLE_TAG_ERROR, NO_COLOR_NAME_ERROR, NULL_FIELD_ERROR,
-    RECIPE_ALREADY_EXISTS_ERROR
-)
-from .models import (
-    Favorites, Ingredient, Recipe, RecipeIngredient,
-    RecipeTag, ShoppingCart, Tag, User
-)
 from users.serializers import UserSerializer
+
+from .constants import (DOUBLE_INGREDIENT_ERROR, DOUBLE_TAG_ERROR,
+                        EMPTY_INGREDIENTS_ERROR, EMPTY_TAGS_ERROR,
+                        NO_COLOR_NAME_ERROR, NULL_FIELD_ERROR,
+                        RECIPE_ALREADY_EXISTS_ERROR)
+from .models import (Favorites, Ingredient, Recipe, RecipeIngredient,
+                     RecipeTag, ShoppingCart, Tag, User)
 
 
 class Base64ImageField(serializers.ImageField):

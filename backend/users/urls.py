@@ -1,10 +1,8 @@
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
-from .views import (
-   GetSubscribeView, LogInView, LogOutView, SetPasswordView, SubscribeViewSet,
-   UserViewSet, UserMeAPIView
-)
+from .views import (GetSubscribeView, LogInView, LogOutView, SetPasswordView,
+                    SubscribeViewSet, UserMeAPIView, UserViewSet)
 
 app_name = 'users'
 

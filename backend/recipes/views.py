@@ -1,4 +1,5 @@
 from collections import defaultdict
+
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
@@ -6,22 +7,19 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .constants import (
-    FAVORITES_DELETE_MESSAGE, FAVORITES_EXISTS_MESSAGE,
-    NOT_IN_FAVORITES_MESSAGE, NOT_IN_SHOP_CART_MESSAGE,
-    RECIPE_DOES_NOT_EXIST, SHOP_CART_DELETE_MESSAGE, SHOP_CART_EXISTS_MESSAGE
-)
+from .constants import (FAVORITES_DELETE_MESSAGE, FAVORITES_EXISTS_MESSAGE,
+                        NOT_IN_FAVORITES_MESSAGE, NOT_IN_SHOP_CART_MESSAGE,
+                        RECIPE_DOES_NOT_EXIST, SHOP_CART_DELETE_MESSAGE,
+                        SHOP_CART_EXISTS_MESSAGE)
 from .filters import RecipeFilter
-from .models import Favorites, Ingredient, Recipe, ShoppingCart, Tag
 from .mixins import CreateDestroyListMixin
+from .models import Favorites, Ingredient, Recipe, ShoppingCart, Tag
 from .pagination import RecipesPagination
-from .permissions import (
-    CustomRecipePermission, IsAdminOrReadOnly, IsAuthorOnly
-)
-from .serializers import (
-    FavoritesSerializer, IngredientSerializer,
-    RecipeSerializer, ShoppingCartSerializer, TagSerializer
-)
+from .permissions import (CustomRecipePermission, IsAdminOrReadOnly,
+                          IsAuthorOnly)
+from .serializers import (FavoritesSerializer, IngredientSerializer,
+                          RecipeSerializer, ShoppingCartSerializer,
+                          TagSerializer)
 
 
 class FavoritesViewSet(CreateDestroyListMixin):

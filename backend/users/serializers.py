@@ -4,11 +4,10 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import Recipe
-from .constants import (
-    CURRENT_PASSWORD_ERROR, USERNAME_ERROR_MESSAGE, USERNAME_REQUIRED_ERROR,
-    USERNAME_SHORT_ERROR
-)
-from .models import BlacklistedToken, User, Subscribe
+
+from .constants import (CURRENT_PASSWORD_ERROR, USERNAME_ERROR_MESSAGE,
+                        USERNAME_REQUIRED_ERROR, USERNAME_SHORT_ERROR)
+from .models import BlacklistedToken, Subscribe, User
 
 
 class BlacklistedTokenSerializer(serializers.ModelSerializer):

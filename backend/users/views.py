@@ -7,18 +7,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
-from .constants import (
-    EMAIL_ALREADY_EXISTS, INVALID_PASSWORD, LOGGED_OUT, NOT_AUTHORIZER,
-    NOT_SUBSCRIBED, PASSWORD_CHANGED_MESSAGE, SELF_SUBSCRIPTION_ERROR,
-    SUBSCRIPTION_ALREADY_EXISTS, UNSUBSCRIBED, USERNAME_ALREADY_EXIST
-)
+from .constants import (EMAIL_ALREADY_EXISTS, INVALID_PASSWORD, LOGGED_OUT,
+                        NOT_AUTHORIZER, NOT_SUBSCRIBED,
+                        PASSWORD_CHANGED_MESSAGE, SELF_SUBSCRIPTION_ERROR,
+                        SUBSCRIPTION_ALREADY_EXISTS, UNSUBSCRIBED,
+                        USERNAME_ALREADY_EXIST)
 from .mixins import CreateDestroyListMixin, UserMeViewSetMixin
 from .models import Subscribe
 from .pagination import UsersPagination
-from .serializers import (
-   SetPasswordSerializer, BlacklistedTokenSerializer, SignupSerializer,
-   SubscribeSerializer, TokenSerializer, UserMeSerializer, UserSerializer
-)
+from .serializers import (BlacklistedTokenSerializer, SetPasswordSerializer,
+                          SignupSerializer, SubscribeSerializer,
+                          TokenSerializer, UserMeSerializer, UserSerializer)
 
 User = get_user_model()
 

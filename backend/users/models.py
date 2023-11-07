@@ -3,7 +3,6 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.utils import timezone
 
-
 ROLES = (
     ('user', 'пользователь'),
     ('admin', 'администратор')
