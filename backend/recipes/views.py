@@ -91,11 +91,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
         return response
 
-    @action(
-        detail=True,
-        methods=['post', 'patch'],
-        permission_classes=[IsAuthenticated]
-    )   
+    @action(detail=True, methods=['post', 'patch'],
+            permission_classes=[IsAuthenticated])
     def favorite(self, request, pk):
         return self.create_fav_shop(FavoritesSerializer, request, pk)
 
@@ -103,8 +100,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def delete_favorite(self, request, pk):
         return self.delete_fav_shop(Favorites, request, pk)
 
-    @action(detail=True, 
-            methods=['post', 'putch'],
+    @action(detail=True, methods=['post', 'putch'],
             permission_classes=[IsAuthenticated]
             )
     def shopping_cart(self, request, pk):
