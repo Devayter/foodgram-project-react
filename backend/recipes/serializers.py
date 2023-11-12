@@ -90,18 +90,18 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         request = self.context.get('request')
-        return (request.user.is_authenticated and
-                Favorites.objects.filter(
+        return (request.user.is_authenticated
+                and Favorites.objects.filter(
                     recipe=obj, user=request.user
-                ).exists()
+                    ).exists()
                 )
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
-        return (request.user.is_authenticated and
-                ShoppingCart.objects.filter(
+        return (request.user.is_authenticated
+                and ShoppingCart.objects.filter(
                     recipe=obj, user=request.user
-                ).exists()
+                    ).exists()
                 )
 
     def to_representation(self, instance):
@@ -219,6 +219,8 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
 class FavShopSerializer(serializers.ModelSerializer):
     """Родительский сериализатор для избранного и списка покупок."""
 
+    NO_MODEL_ERROR = {'detail': 'Отсутствует модель'}
+
     recipe = serializers.PrimaryKeyRelatedField(
         queryset=Recipe.objects.all(),
         write_only=True
@@ -243,7 +245,7 @@ class FavShopSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if self.Meta:
             return data
-        raise ValidationError('Какая-то ошибка')
+        raise ValidationError(self.NO_MODEL_ERROR)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
