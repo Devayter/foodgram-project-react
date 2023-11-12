@@ -6,7 +6,10 @@ from .models import Subscribe, User
 
 @admin.register(User)
 class UserAdmin(UserAdmin):
-    list_display = ('username', 'first_name', 'last_name', 'email', 'recipe_count', 'subscribe_count')
+    list_display = (
+        'username', 'first_name', 'last_name', 'email',
+        'recipe_count', 'subscribe_count'
+    )
     list_display_links = ('username', 'first_name', 'last_name', 'email')
     list_filter = ('first_name', 'last_name',)
     search_fields = ('username', 'first_name', 'last_name',)

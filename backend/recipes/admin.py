@@ -40,7 +40,7 @@ class RecipetAdmin(admin.ModelAdmin):
     list_display = (
         'author', 'name', 'get_ingredients', 'cooking_time', 'pub_date',
         'favorites_count', 'image_display', 'text',
-        )
+    )
     list_display_links = ('author', 'name', 'get_ingredients', 'pub_date')
     list_filter = ('author', 'name', 'pub_date')
     search_fields = ('name',)

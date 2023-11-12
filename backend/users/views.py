@@ -34,7 +34,7 @@ class UserViewSet(UserViewSet):
             detail=False,
             methods=['get'],
             permission_classes=[IsAuthenticated]
-    )
+            )
     def subscriptions(self, request):
 
         queryset = Subscribe.objects.filter(

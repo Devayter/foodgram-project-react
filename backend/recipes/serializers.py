@@ -11,10 +11,6 @@ from .constants import MAX_VALUE_180, MIN_VALUE_1
 from .models import (Favorites, Ingredient, Recipe, RecipeIngredient,
                      RecipeTag, ShoppingCart, Tag, User)
 
-# import base64
-
-
-
 
 class Hex2NameColor(serializers.Field):
     """Сериализатор цветового кода."""
@@ -95,15 +91,21 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         request = self.context.get('request')
         return (
-            request.user.is_authenticated and
-            Favorites.objects.filter(recipe=obj, user=request.user).exists()
+            request.user.is_authenticated
+            and Favorites.objects.filter(
+                recipe=obj,
+                user=request.user
+                ).exists()
         )
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
         return (
-            request.user.is_authenticated and
-            ShoppingCart.objects.filter(recipe=obj, user=request.user).exists()
+            request.user.is_authenticated
+            and ShoppingCart.objects.filter(
+                recipe=obj,
+                user=request.user
+                ).exists()
         )
 
     def to_representation(self, instance):
