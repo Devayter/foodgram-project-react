@@ -91,18 +91,19 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         request = self.context.get('request')
         return (request.user.is_authenticated
-                and Favorites.objects.filter(
-                        recipe=obj, user=request.user
-                    ).exists()
+                and Favorites.objects.filter(recipe=obj,
+                                             user=request.user
+                                             ).exists()
                 )
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
-        return (request.user.is_authenticated
-                and ShoppingCart.objects.filter(
-                        recipe=obj, user=request.user
-                    ).exists()
-                )
+        return (
+            request.user.is_authenticated
+            and ShoppingCart.objects.filter(
+                recipe=obj, user=request.user
+                ).exists()
+        )
 
     def to_representation(self, instance):
         data = super(RecipeSerializer, self).to_representation(instance)
