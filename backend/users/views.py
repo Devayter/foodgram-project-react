@@ -31,10 +31,8 @@ class UserViewSet(UserViewSet):
         return super().get_permissions()
 
     @action(
-            detail=False,
-            methods=['get'],
-            permission_classes=[IsAuthenticated]
-            )
+            detail=False, methods=['get'], permission_classes=[IsAuthenticated]
+    )
     def subscriptions(self, request):
 
         queryset = Subscribe.objects.filter(
