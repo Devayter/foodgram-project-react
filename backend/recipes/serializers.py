@@ -100,10 +100,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         return (
             request.user.is_authenticated
-            and ShoppingCart.objects.filter(
-                recipe=obj, user=request.user
-                ).exists()
-        )
+            and ShoppingCart.objects.filter(recipe=obj,
+                                            user=request.user
+                                            ).exists()
+            )
 
     def to_representation(self, instance):
         data = super(RecipeSerializer, self).to_representation(instance)
