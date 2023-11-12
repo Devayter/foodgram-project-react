@@ -1,16 +1,19 @@
 import webcolors
-# import base64
-
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 
 from users.serializers import UserSerializer
-from .constants import MIN_VALUE_1, MAX_VALUE_180
+
+from .constants import MAX_VALUE_180, MIN_VALUE_1
 from .models import (Favorites, Ingredient, Recipe, RecipeIngredient,
                      RecipeTag, ShoppingCart, Tag, User)
+
+# import base64
+
+
 
 
 class Hex2NameColor(serializers.Field):
@@ -226,6 +229,7 @@ class FavShopSerializer(serializers.ModelSerializer):
         queryset=User.objects.all(),
         write_only=True
     )
+    image = serializers.ImageField(source='recipe.image', read_only=True)
 
     validators = [
         UniqueTogetherValidator(
@@ -247,9 +251,6 @@ class FavShopSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data['name'] = instance.recipe.name
         data['cooking_time'] = instance.recipe.cooking_time
-        data['image'] = (
-            'http://127.0.0.1:8000/media/' + str(instance.recipe.image)
-        )
         return data
 
 

@@ -1,56 +1,84 @@
-from django.shortcuts import get_object_or_404
-from djoser.views import UserViewSet as DjoserViewSet
-from rest_framework import status, viewsets
+from djoser.views import UserViewSet
+from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from .constants import (
-                        NOT_SUBSCRIBED,
-                     SELF_SUBSCRIPTION_ERROR,
-                        SUBSCRIPTION_ALREADY_EXISTS, UNSUBSCRIBED,
-                        )
-from .models import Subscribe, User
 from recipes.pagination import RecipesUsersPagination
-from .serializers import SubscribeSerializer, UserSerializer
+
+from .models import Subscribe, User
+from .serializers import (SubscribeCreateDeleteSerializer, SubscribeSerializer,
+                          UserSerializer)
 
 
-class UserViewSet(DjoserViewSet):
-    """Вьюсет для регистрации"""
+class UserViewSet(UserViewSet):
+    """Вьюсет для регистрации, смены пароля, получения списков пользователей и
+    подписок, создания/удаления подписки.
+    """
+
+    UNSUBSCRIBED = {'detail': 'Вы отписались от пользователя'}
+    UNSUBSCRIBED_ERROR = {'detail': 'Вы не подписаны на этого пользователя'}
 
     pagination_class = RecipesUsersPagination
+    queryset = User.objects.all()
     serializer_class = UserSerializer
 
     def get_permissions(self):
         if self.action == 'me':
             return (IsAuthenticated(),)
+        if self.action in ['list', 'retrieve']:
+            return (AllowAny(),)
         return super().get_permissions()
 
-    # @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    # def subscribtions(self, request):
-    #     queryset = Subscribe.objects.filter(
-    #         subscriber=self.request.user.id
-    #     ).values('author')
-    #     # print('>>>>', paginate_qweryset)
-    #     # serializer = SubscribeSerializer(data=paginate_qweryset)
-    #     # serializer.is_valid(raise_exception=True)
-    #     # return Response(serializer.data, status=status.HTTP_200_OK)
-    #     page = self.paginate_queryset(queryset)
-    #     serializer = self.get_pagination_serializer(page)
-    #     return Response(serializer.data)
+    @action(
+            detail=False,
+            methods=['get'],
+            permission_classes=[IsAuthenticated]
+    )
+    def subscriptions(self, request):
 
-    #     # paginated_subscriptions = self.paginator.paginate_queryset(queryset, self.request)
-    #     # serializer = SubscribeSerializer(paginated_subscriptions, many=True)
-    #     # data = paginated.data
-    #     paginated = self.get_paginated_response(data)
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
-    #     return self.paginator.get_paginated_response(serializer.data)
+        queryset = Subscribe.objects.filter(
+            subscriber=self.request.user.id
+        )
+        paginate_queryset = self.paginate_queryset(queryset)
 
+        if paginate_queryset is not None:
+            serializer = SubscribeSerializer(
+                paginate_queryset,
+                context={"request": request},
+                many=True
+            )
+            return self.get_paginated_response(serializer.data)
 
-    # def get_queryset(self):
-    #     print('>>>>>>', Subscribe.objects.filter(
-    #         subscriber=self.request.user
-    #     ).values('author'))
-    #     return Subscribe.objects.filter(
-    #         subscriber=self.request.user.id
-    #     ).values('author')
+        serializer = SubscribeSerializer(
+            queryset,
+            context={"request": request},
+            many=True
+        )
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'],
+            permission_classes=[IsAuthenticated]
+            )
+    def subscribe(self, request, id):
+        data_dict = {"author": id, "subscriber": request.user.id}
+        serializer = SubscribeCreateDeleteSerializer(
+            data=data_dict,
+            context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @subscribe.mapping.delete
+    def delete_subscribe(self, request, id):
+        try:
+            object = Subscribe.objects.get(author=id, subscriber=request.user)
+            object.delete()
+            return Response(
+                self.UNSUBSCRIBED, status=status.HTTP_204_NO_CONTENT
+            )
+        except Subscribe.DoesNotExist:
+            return Response(
+                self.UNSUBSCRIBED_ERROR, status=status.HTTP_404_NOT_FOUND
+            )

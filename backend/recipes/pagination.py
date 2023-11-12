@@ -5,5 +5,6 @@ from .constants import PAGE_SIZE_6
 
 class RecipesUsersPagination(LimitOffsetPagination):
     """Пагинатор для рецептов."""
+    default_limit = PAGE_SIZE_6
     page_size = PAGE_SIZE_6
     page_size_query_param = 'page_size'

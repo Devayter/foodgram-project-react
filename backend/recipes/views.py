@@ -8,13 +8,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .filters import IngredientFilter, RecipeFilter
-from .models import (
-    Favorites, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag
-)
+from .models import (Favorites, Ingredient, Recipe, RecipeIngredient,
+                     ShoppingCart, Tag)
 from .pagination import RecipesUsersPagination
 from .permissions import IsAuthorOnly
 from .serializers import (FavoritesSerializer, IngredientSerializer,
-                          RecipeSerializer, RecipeCreateUpdateSerializer,
+                          RecipeCreateUpdateSerializer, RecipeSerializer,
                           ShoppingCartSerializer, TagSerializer)
 
 RECIPE_DELETE_MESSAGE = {'detail': 'Рецепт удален из списка'}

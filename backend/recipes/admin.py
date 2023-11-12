@@ -7,7 +7,6 @@ from .models import (Favorites, Ingredient, Recipe, RecipeIngredient,
                      RecipeTag, ShoppingCart, Tag)
 from .resource import IngredientResource
 
-
 admin.site.unregister(Group)
 
 

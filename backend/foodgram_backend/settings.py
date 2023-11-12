@@ -27,7 +27,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'api.apps.ApiConfig',
     'colorfield',
     'corsheaders',
     'users.apps.UsersConfig',
@@ -95,12 +94,13 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination'
 }
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
-    # 'PERMISSIONS': {'user': ['users.permissions']},
     'SERIALIZERS': {'user': 'users.serializers.UserSerializer', },
+    'HIDE_USERS': False
 
 }
 

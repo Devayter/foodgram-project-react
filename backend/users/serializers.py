@@ -1,13 +1,14 @@
 from django.core.exceptions import ValidationError
+from djoser.serializers import UserSerializer
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import Recipe
+
 from .models import Subscribe, User
 
 
-class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор пользователя для запроса /users/me/"""
+class UserSerializer(UserSerializer):
+    """Сериализатор пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()
 
@@ -19,45 +20,88 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
 
     def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request:
+            if request.user.is_authenticated:
+                return Subscribe.objects.select_related('author').filter(
+                    subscriber=request.user
+                ).exists()
+        return False
 
-        return (self.context.get('request')
-                and self.context.get('request').user.is_authenticated
-                and Subscribe.objects.select_related('author').filter(
-                    author=obj,
-                    subscriber=self.context.get('request').user
-                    ).exists()
-                )
+
+class ShortRecipeSerializer(serializers.ModelSerializer):
+
+    image = serializers.ImageField(read_only=True)
+
+    class Meta:
+        fields = ('id', 'name', 'image', 'cooking_time')
+        model = Recipe
 
 
 class SubscribeSerializer(UserSerializer):
-    """Сериализатор подписок"""
-    # recipes_count = serializers.ReadOnlyField(source='author.recipes.count')
+    """Сериализатор подписок для GET запросов."""
 
-    # validators = [
-    #     UniqueTogetherValidator(
-    #         queryset=Subscribe.objects.all(),
-    #         fields=('author', 'subscriber',)
-    #     )
-    # ]
+    recipes = serializers.SerializerMethodField()
+    id = serializers.ReadOnlyField(source='author.id')
+    username = serializers.ReadOnlyField(source='author.username')
+    first_name = serializers.ReadOnlyField(source='author.first_name')
+    last_name = serializers.ReadOnlyField(source='author.last_name')
+    email = serializers.ReadOnlyField(source='author.email')
+    recipes_count = serializers.ReadOnlyField(source='author.recipes.count')
 
     class Meta:
         fields = (
-            'id',
+            'id', 'username', 'first_name', 'last_name', 'email',
+            'recipes_count', 'recipes', 'is_subscribed'
         )
         model = User
 
+    def get_recipes(self, instance):
+        recipes = Recipe.objects.filter(author=instance.author)
+        recipes_limit = self.context['request'].query_params.get(
+            'limit'
+        )
 
-    # def to_representation(self, instance):
-    #     data = super(SubscribeSerializer, self).to_representation(instance)
-    #     user_id = instance.user.id
-    #     recipes_limit = self.context['request'].query_params.get(
-    #         'recipes_limit'
-    #     )
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
 
-    #     recipes = Recipe.objects.filter(author_id=user_id)
-    #     if recipes_limit:
-    #         recipes = recipes[:int(recipes_limit)]
+        return ShortRecipeSerializer(recipes, many=True).data
 
-    #     recipes = recipes.values('id', 'name', 'image', 'cooking_time')
-    #     data['recipes'] = recipes
-    #     return data
+
+class SubscribeCreateDeleteSerializer(SubscribeSerializer):
+    """Сериализатор для создания и удаления подписок."""
+
+    SELF_SUBSCRIPTION_ERROR = {
+        'detail': 'Невозвожно подписаться на самого себя'
+    }
+    SUBSCRIPTION_ALREADY_EXISTS = {
+        'detail': 'Вы уже подписаны на этого пользователя'
+    }
+
+    author = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        write_only=True,
+
+    )
+    subscriber = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        write_only=True,
+    )
+
+    class Meta:
+        fields = (
+            'id', 'username', 'first_name', 'last_name', 'email',
+            'recipes_count', 'recipes', 'is_subscribed', 'author', 'subscriber'
+        )
+        model = Subscribe
+
+    def validate(self, data):
+        author = data.get('author')
+        subscriber = self.context['request'].user
+        if author == subscriber:
+            raise ValidationError(self.SELF_SUBSCRIPTION_ERROR)
+        if Subscribe.objects.filter(
+            author=author, subscriber=subscriber
+        ).exists():
+            raise ValidationError(self.SUBSCRIPTION_ALREADY_EXISTS)
+        return data

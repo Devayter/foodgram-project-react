@@ -1,8 +1,8 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (IngredientViewSet, RecipeViewSet,
-                    ShoppingCartDownLoadView, TagViewSet)
+from .views import (IngredientViewSet, RecipeViewSet, ShoppingCartDownLoadView,
+                    TagViewSet)
 
 app_name = 'recipes'
 
@@ -18,5 +18,5 @@ urlpatterns = [
         ShoppingCartDownLoadView.as_view(),
         name='download_shopping_cart'
     ),
-    path('', include(router_v1.urls))
+    path('', include(router_v1.urls)),
 ]
