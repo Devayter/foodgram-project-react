@@ -1,17 +1,10 @@
-CURRENT_PASSWORD_ERROR = 'Текущий пароль введен неверно, поторите попытку'
-EMAIL_ALREADY_EXISTS = 'Пользователь с таким email уже существует'
-INVALID_TOKEN = 'Неверный токен, необходима повторная авторизация.'
-INVALID_PASSWORD = 'Неверная почта или пароль'
-LOGGED_OUT = 'Вы вышли из учетной записп'
-NOT_AUTHORIZER = 'Пользователь не авторизован'
-NOT_SUBSCRIBED = 'Вы не подписаны на этого пользователя'
-PASSWORD_CHANGED_MESSAGE = 'Вы установили новый пароль'
-SELF_SUBSCRIPTION_ERROR = 'Невозвожно подписаться на самого себя'
-SUBSCRIPTION_ALREADY_EXISTS = 'Вы уже подписаны на этого пользователя'
-UNSUBSCRIBED = 'Вы отписались от пользователя'
-USERNAME_ALREADY_EXIST = 'Такой пользователь уже существует'
-USERNAME_ERROR_MESSAGE = (
-    'Имя пользователя может содержать только буквы, цифры и символы @ . + -'
-)
-USERNAME_REQUIRED_ERROR = 'Поле "username" обязательно для заполнения'
-USERNAME_SHORT_ERROR = 'Логин слишком короткий. Минимальная длина: 4 символа.'
+NOT_SUBSCRIBED = {'detail': 'Вы не подписаны на этого пользователя'}
+SELF_SUBSCRIPTION_ERROR = {'detail': 'Невозвожно подписаться на самого себя'}
+SUBSCRIPTION_ALREADY_EXISTS = {
+    'detail': 'Вы уже подписаны на этого пользователя'
+}
+UNSUBSCRIBED = {'detail': 'Вы отписались от пользователя'}
+
+
+MAX_LENGTH_150 = 150
+MAX_LENGTH_254 = 254

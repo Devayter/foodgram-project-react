@@ -2,11 +2,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from foodgram_backend import settings
-
-from .views import custom404
-
-handler404 = custom404
+from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),

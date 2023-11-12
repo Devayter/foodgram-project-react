@@ -1,10 +1,37 @@
 from django_filters import rest_framework as filters
 
-from .models import Recipe
+
+from .models import Ingredient, Recipe
+
+
+# class IngredientSearchFilter(filters.SearchFilter):
+#     """Фильтр для поиска ингредиентов по наименования"""
+
+#     name = rest_framework.CharFilter(lookup_expr='istartswith')
+
+#     def get_search_fields(self, view, request):
+#         if request.query_params.get('name'):
+#             return ['name']
+#         return super().get_search_fields(view, request)
+
+#     class Meta:
+#         model = Ingredient
+#         fields = ('name',)
+
+
+class IngredientFilter(filters.FilterSet):
+    """Фильтр для поиска ингредиентов по наименования"""
+
+    name = filters.CharFilter(lookup_expr='istartswith')
+
+    class Meta:
+        model = Ingredient
+        fields = ('name',)
 
 
 class RecipeFilter(filters.FilterSet):
     """Фильтр рецептов по автору, тегам, избранныи и списку покупок"""
+
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
     is_favorited = filters.BooleanFilter(method='filter_is_favorited')
     is_in_shopping_cart = filters.BooleanFilter(
@@ -12,10 +39,10 @@ class RecipeFilter(filters.FilterSet):
     )
 
     def filter_is_favorited(self, queryset, name, value):
-        return queryset.filter(recipe_favorites__user=self.request.user.id)
+        return queryset.filter(favorites__user=self.request.user.id)
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
-        return queryset.filter(shopping_cart__user=self.request.user.id)
+        return queryset.filter(shoppingcart__user=self.request.user.id)
 
     class Meta:
         model = Recipe

@@ -4,6 +4,6 @@ from .models import Ingredient
 
 
 class IngredientResource(resources.ModelResource):
-    """Настройка импорта для админки"""
+    """Настройка импорта для админки."""
     class Meta:
         model = Ingredient

@@ -1,35 +1,22 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
-from django.utils import timezone
 
-ROLES = (
-    ('user', 'пользователь'),
-    ('admin', 'администратор')
-)
-
-
-class BlacklistedToken(models.Model):
-    """Модель черного списка токенов доступа"""
-    token = models.CharField(max_length=500)
-    blacklisted_at = models.DateTimeField(default=timezone.now)
-
-    def __str__(self):
-        return self.token
+from .constants import MAX_LENGTH_150, MAX_LENGTH_254
 
 
 class Subscribe(models.Model):
-    '''Модель подписок'''
-    user = models.ForeignKey(
+    """Модель подписок."""
+    author = models.ForeignKey(
         'User',
-        blank=False,
+        max_length=MAX_LENGTH_150,
         on_delete=models.CASCADE,
-        related_name='user',
-        verbose_name='Пользователь'
+        related_name='author',
+        verbose_name='Автор'
     )
     subscriber = models.ForeignKey(
         'User',
-        blank=False,
+        max_length=MAX_LENGTH_150,
         on_delete=models.CASCADE,
         related_name='subscriber',
         verbose_name='Подписчик'
@@ -37,20 +24,26 @@ class Subscribe(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(
+                name='users_subscribe_prevent_self_follow',
+                check=~models.Q(author=models.F('subscriber')),
+            ),
             models.UniqueConstraint(
-                fields=('user', 'subscriber'),
-                name='unique_user_subscriber'
+                fields=('author', 'subscriber'),
+                name='unique_author_subscriber'
             )
         ]
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
 
+    def __str__(self):
+        return f'Пользователь {self.subscriber} подписан на {self.author}'
+
 
 class User(AbstractUser):
-    '''Модель пользователя'''
+    """Модель пользователя."""
     username = models.CharField(
-        blank=False,
-        max_length=150,
+        max_length=MAX_LENGTH_150,
         unique=True,
         validators=[
             RegexValidator(
@@ -65,30 +58,26 @@ class User(AbstractUser):
         verbose_name='Логин'
     )
     first_name = models.CharField(
-        blank=False,
-        max_length=150,
+        max_length=MAX_LENGTH_150,
         verbose_name='Имя пользователя',
     )
     last_name = models.CharField(
-        blank=False,
-        max_length=150,
+        max_length=MAX_LENGTH_150,
         verbose_name='Фамилия пользователя'
     )
     email = models.EmailField(
-        blank=False,
-        max_length=300,
+        max_length=MAX_LENGTH_254,
         unique=True,
         verbose_name='Электронная почта'
     )
-    role = models.CharField(
-        choices=ROLES,
-        blank=False,
-        default='user',
-        max_length=50,
-        verbose_name='Уровень доступа'
-    )
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('first_name', 'last_name', 'username')
 
     class Meta:
-        ordering = ['username', ]
+        ordering = ('username',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+    def __str__(self):
+        return f'{self.first_name} {self.last_name}'
