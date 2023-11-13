@@ -1,0 +1,6 @@
+{
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true,
+    "editor.semanticTokenColorCustomizations": {},
+    "python.linting.mypyEnabled": false
+}
