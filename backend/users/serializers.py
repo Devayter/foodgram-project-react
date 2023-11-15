@@ -1,12 +1,12 @@
 from django.core.exceptions import ValidationError
-from djoser.serializers import UserSerializer
+from djoser.serializers import UserSerializer as DjoserSerializer
 from rest_framework import serializers
 
 from recipes.models import Recipe
 from .models import Subscribe, User
 
 
-class UserSerializer(UserSerializer):
+class UserSerializer(DjoserSerializer):
     """Сериализатор пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()
@@ -26,13 +26,9 @@ class UserSerializer(UserSerializer):
                     subscriber=request.user
                 ).exists())
 
-    # return (request
-    #             and request.user.is_authenticated
-    #             and obj.author.author.filter(
-    # subscriber=request.user).exists())
-
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
+    """Короткий сериализатор рецептов для подписок."""
 
     image = serializers.ImageField(read_only=True)
 
@@ -45,22 +41,13 @@ class SubscribeSerializer(UserSerializer):
     """Сериализатор подписок для GET запросов."""
 
     recipes = serializers.SerializerMethodField()
-    id = serializers.ReadOnlyField(source='author.id')
-    username = serializers.ReadOnlyField(source='author.username')
-    first_name = serializers.ReadOnlyField(source='author.first_name')
-    last_name = serializers.ReadOnlyField(source='author.last_name')
-    email = serializers.ReadOnlyField(source='author.email')
     recipes_count = serializers.ReadOnlyField(source='author.recipes.count')
 
     class Meta:
-        fields = (
-            'id', 'username', 'first_name', 'last_name', 'email',
-            'recipes_count', 'recipes', 'is_subscribed'
-        )
-        model = User
+        fields = ('author', 'subscriber', 'recipes', 'recipes_count')
+        model = Subscribe
 
     def get_recipes(self, instance):
-        print('>>>', type(instance))
         recipes = Recipe.objects.filter(author=instance.author)
         if self.context:
             recipes_limit = self.context['request'].query_params.get(
@@ -68,7 +55,6 @@ class SubscribeSerializer(UserSerializer):
             )
             if recipes_limit and recipes_limit.isdigit():
                 recipes = recipes[:int(recipes_limit)]
-
         return ShortRecipeSerializer(
             recipes, context=self.context,
             many=True
@@ -100,6 +86,8 @@ class SubscribeCreateDeleteSerializer(SubscribeSerializer):
             raise ValidationError(self.SUBSCRIPTION_ALREADY_EXISTS)
         return data
 
-    # def to_representation(self, instance):
-    #     print('><<>>>', instance)
-    #     return SubscribeSerializer(instance.author).data
+    def to_representation(self, instance):
+        return SubscribeSerializer(
+            instance,
+            context={'request': self.context.get('request')}
+        ).data

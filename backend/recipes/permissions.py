@@ -3,6 +3,7 @@ from rest_framework.permissions import SAFE_METHODS
 
 class IsAuthorOnly(BaseException):
     """Доступ к объекту только автору."""
+
     def has_permission(self, request, view):
         return request.method in SAFE_METHODS or request.user.is_authenticated
 

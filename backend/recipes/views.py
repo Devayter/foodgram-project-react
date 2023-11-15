@@ -1,11 +1,10 @@
-from django.db.models import F, Sum
+from django.db.models import Exists, F, OuterRef, Sum
 from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from .filters import IngredientFilter, RecipeFilter
 from .models import (Favorites, Ingredient, Recipe, RecipeIngredient,
@@ -37,10 +36,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = RecipesUsersPagination
     permission_classes = (IsAuthorOnly,)
     serializer_class = RecipeSerializer
-    queryset = Recipe.objects.select_related('author').prefetch_related(
-        'tags',
-        'ingredients'
-    ).all()
+
+    def get_queryset(self):
+        return (
+            Recipe.objects.select_related('author').prefetch_related(
+                'tags',
+                'ingredients'
+            ).annotate(
+                is_favorited=Exists(
+                    Favorites.objects.filter(
+                        recipe=OuterRef('id'),
+                        user=self.request.user
+                    )
+                ),
+                is_in_shopping_cart=Exists(
+                    ShoppingCart.objects.filter(
+                        recipe=OuterRef('id'),
+                        user=self.request.user
+                    )
+                )
+            ).all()
+        )
 
     def get_serializer_class(self):
         """Возвращает необходимый сериализатор."""
@@ -118,28 +134,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk):
         return self.delete_fav_shop(ShoppingCart, request, pk)
-
-
-class ShoppingCartDownLoadView(APIView):
-    """
-    Класс для загрузки списка покупок с суммированием повторяющихся
-      ингредиентов.
-    """
-
-    # permission_classes = (IsAuthorOnly,)
-    # serializer_class = ShoppingCartSerializer
-    # queryset = ShoppingCart.objects.all()
-
-    # def get(self, request):
-
-    #     ingredients = RecipeIngredient.objects.filter(
-    #         recipe__shoppingcart__user=request.user
-    #     ).values(
-    #         name=F('ingredient__name'),
-    #         unit=F('ingredient__measurement_unit')
-    #     ).order_by('name').annotate(total=Sum('amount'))
-
-    #     return RecipeViewSet.download_shopping_list(ingredients)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
