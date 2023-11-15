@@ -49,7 +49,6 @@ class Ingredient(models.Model):
 
     name = models.CharField(
         max_length=NAME_SLUG_MEASURE_MAX_LENGTH,
-        unique=True,
         verbose_name='Наименование ингредиента'
     )
     measurement_unit = models.CharField(
