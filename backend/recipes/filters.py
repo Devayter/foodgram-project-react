@@ -4,7 +4,7 @@ from .models import Ingredient, Recipe
 
 
 class IngredientFilter(filters.FilterSet):
-    """Фильтр для поиска ингредиентов по наименования"""
+    """Фильтр для поиска ингредиентов по наименования."""
 
     name = filters.CharFilter(lookup_expr='istartswith')
 
@@ -14,7 +14,7 @@ class IngredientFilter(filters.FilterSet):
 
 
 class RecipeFilter(filters.FilterSet):
-    """Фильтр рецептов по автору, тегам, избранныи и списку покупок"""
+    """Фильтр рецептов по автору, тегам, избранныи и списку покупок."""
 
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
     is_favorited = filters.BooleanFilter(method='filter_is_favorited')

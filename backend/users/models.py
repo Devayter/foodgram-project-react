@@ -2,21 +2,22 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
 
-from .constants import MAX_LENGTH_150, MAX_LENGTH_254
+from .constants import USER_MAX_LENGTH, EMAIL_MAX_LENGTH
 
 
 class Subscribe(models.Model):
     """Модель подписок."""
+
     author = models.ForeignKey(
         'User',
-        max_length=MAX_LENGTH_150,
+        max_length=USER_MAX_LENGTH,
         on_delete=models.CASCADE,
         related_name='author',
         verbose_name='Автор'
     )
     subscriber = models.ForeignKey(
         'User',
-        max_length=MAX_LENGTH_150,
+        max_length=USER_MAX_LENGTH,
         on_delete=models.CASCADE,
         related_name='subscriber',
         verbose_name='Подписчик'
@@ -42,8 +43,9 @@ class Subscribe(models.Model):
 
 class User(AbstractUser):
     """Модель пользователя."""
+
     username = models.CharField(
-        max_length=MAX_LENGTH_150,
+        max_length=USER_MAX_LENGTH,
         unique=True,
         validators=[
             RegexValidator(
@@ -58,15 +60,15 @@ class User(AbstractUser):
         verbose_name='Логин'
     )
     first_name = models.CharField(
-        max_length=MAX_LENGTH_150,
+        max_length=USER_MAX_LENGTH,
         verbose_name='Имя пользователя',
     )
     last_name = models.CharField(
-        max_length=MAX_LENGTH_150,
+        max_length=USER_MAX_LENGTH,
         verbose_name='Фамилия пользователя'
     )
     email = models.EmailField(
-        max_length=MAX_LENGTH_254,
+        max_length=EMAIL_MAX_LENGTH,
         unique=True,
         verbose_name='Электронная почта'
     )

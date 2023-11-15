@@ -29,10 +29,12 @@ class IngredientAdmin(ImportExportModelAdmin):
 
 class IngredientsInline(admin.TabularInline):
     model = RecipeIngredient
+    min_num = 1
 
 
 class TagsInLine(admin.TabularInline):
     model = RecipeTag
+    min_num = 1
 
 
 @admin.register(Recipe)
@@ -50,19 +52,20 @@ class RecipetAdmin(admin.ModelAdmin):
         TagsInLine
     ]
 
+    @admin.display(description='Добавлено в избранное')
     def favorites_count(self, obj):
         return obj.favorites.count()
-    favorites_count.short_description = 'Добавлено в избранное'
 
+    @admin.display(description='Ингредиенты')
     def get_ingredients(self, obj):
-        return ", \n".join(
-            [i.ingredient.name for i in obj.ingredients_used.all()]
+        return ", ".join(
+            [ingredient_used.ingredient.name
+             for ingredient_used in obj.ingredients_used.all()]
         )
-    get_ingredients.short_description = 'Ингредиенты'
 
+    @admin.display(description='Изображение')
     def image_display(self, obj):
         return mark_safe(f'<img src={obj.image.url} width="80" height="60">')
-    image_display.short_description = 'Изображение'
 
 
 @admin.register(RecipeIngredient)

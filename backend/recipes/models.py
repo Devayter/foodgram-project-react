@@ -3,13 +3,15 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from users.models import User
+from .constants import (
+    INGREDIENTS_MIN_VALUE, NAME_SLUG_MEASURE_MAX_LENGTH, POSITIVE_SMALL_MAX,
+    TIME_MIN_VALUE
+)
 
-from .constants import (MAX_LENGTH_200, MAX_VALUE_180, MAX_VALUE_1000,
-                        MIN_VALUE_1)
 
+class AbstractRecipeUser(models.Model):
+    """Абстрактная родительская модель для списка покупок и избранного."""
 
-class AbstractFavShop(models.Model):
-    """Абстрактная родительяская модель для списка покупок и избранного."""
     recipe = models.ForeignKey(
         'Recipe',
         on_delete=models.CASCADE,
@@ -31,7 +33,7 @@ class AbstractFavShop(models.Model):
         return f'{self.recipe}, {self.user}'
 
 
-class Favorites(AbstractFavShop):
+class Favorites(AbstractRecipeUser):
     """Модель избранного."""
 
     class Meta:
@@ -46,13 +48,14 @@ class Favorites(AbstractFavShop):
 
 class Ingredient(models.Model):
     """Модель ингредиентов."""
+
     name = models.CharField(
-        max_length=MAX_LENGTH_200,
+        max_length=NAME_SLUG_MEASURE_MAX_LENGTH,
         unique=True,
         verbose_name='Наименование ингредиента'
     )
     measurement_unit = models.CharField(
-        max_length=MAX_LENGTH_200,
+        max_length=NAME_SLUG_MEASURE_MAX_LENGTH,
         verbose_name='Единица измерения'
     )
 
@@ -72,6 +75,7 @@ class Ingredient(models.Model):
 
 class Recipe(models.Model):
     """Модель рецептов."""
+
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -80,8 +84,20 @@ class Recipe(models.Model):
     )
     cooking_time = models.PositiveSmallIntegerField(
         validators=[
-            MinValueValidator(MIN_VALUE_1),
-            MaxValueValidator(MAX_VALUE_180),
+            MinValueValidator(
+                TIME_MIN_VALUE,
+                message=(
+                    'Время готовки должно быть больше или равно {0}. '
+                    'Введите допустимое значение'.format(TIME_MIN_VALUE)
+                ),
+            ),
+            MaxValueValidator(
+                POSITIVE_SMALL_MAX,
+                message=(
+                    'Время готовки должно быть меньше или равно {0}. '
+                    'Введите допустимое значение.'.format(POSITIVE_SMALL_MAX)
+                ),
+            ),
         ],
         verbose_name='Время приготовления (мин.)'
     )
@@ -89,7 +105,6 @@ class Recipe(models.Model):
         verbose_name='Описание рецепта'
     )
     image = models.ImageField(
-        null=False,
         upload_to='images',
         verbose_name='Фото блюда'
     )
@@ -98,7 +113,7 @@ class Recipe(models.Model):
         through='RecipeIngredient',
     )
     name = models.CharField(
-        max_length=MAX_LENGTH_200,
+        max_length=NAME_SLUG_MEASURE_MAX_LENGTH,
         verbose_name='Название рецепта'
     )
     pub_date = models.DateTimeField(
@@ -122,11 +137,24 @@ class Recipe(models.Model):
 
 class RecipeIngredient(models.Model):
     """Промежуточная таблица ингредиентов для рецепта."""
+
     amount = models.PositiveSmallIntegerField(
         null=False,
         validators=[
-            MinValueValidator(MIN_VALUE_1),
-            MaxValueValidator(MAX_VALUE_1000),
+            MinValueValidator(
+                INGREDIENTS_MIN_VALUE,
+                message=(
+                    'Количество ингрендиентов не должно быть меньше {0}. '
+                    'Введите допустимое значение'.format(INGREDIENTS_MIN_VALUE)
+                ),
+            ),
+            MaxValueValidator(
+                POSITIVE_SMALL_MAX,
+                message=(
+                    'Количество ингрендиентов не должно быть больше {0}. '
+                    'Введите допустимое значение'.format(POSITIVE_SMALL_MAX)
+                ),
+            ),
         ],
         verbose_name='Количество'
     )
@@ -155,6 +183,7 @@ class RecipeIngredient(models.Model):
 
 class RecipeTag(models.Model):
     """Промежуточная модель тегов для рецепта."""
+
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -180,7 +209,7 @@ class RecipeTag(models.Model):
         return f'{self.recipe} {self.tag}'
 
 
-class ShoppingCart(AbstractFavShop):
+class ShoppingCart(AbstractRecipeUser):
     """Модель списка покупок."""
 
     class Meta:
@@ -194,15 +223,16 @@ class ShoppingCart(AbstractFavShop):
 
 
 class Tag(models.Model):
-    """Модель тегов"""
+    """Модель тегов."""
+
     color = ColorField(unique=True, verbose_name='Цветовое обозначение тэга')
     name = models.CharField(
-        max_length=MAX_LENGTH_200,
+        max_length=NAME_SLUG_MEASURE_MAX_LENGTH,
         unique=True,
         verbose_name='Имя тэга'
     )
     slug = models.SlugField(
-        max_length=MAX_LENGTH_200,
+        max_length=NAME_SLUG_MEASURE_MAX_LENGTH,
         unique=True,
         verbose_name='Слаг тэга'
     )

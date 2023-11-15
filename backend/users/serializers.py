@@ -3,7 +3,6 @@ from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
 from recipes.models import Recipe
-
 from .models import Subscribe, User
 
 
@@ -21,12 +20,13 @@ class UserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        if request:
-            if request.user.is_authenticated:
-                return Subscribe.objects.select_related('author').filter(
-                    subscriber=request.user
-                ).exists()
-        return False
+        return (request
+                and request.user.is_authenticated
+                and obj.author.author.filter(subscriber=request.user).exists())
+    
+    # return (request
+    #             and request.user.is_authenticated
+    #             and obj.author.author.filter(subscriber=request.user).exists())
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
@@ -57,15 +57,19 @@ class SubscribeSerializer(UserSerializer):
         model = User
 
     def get_recipes(self, instance):
+        print('>>>', type(instance))
         recipes = Recipe.objects.filter(author=instance.author)
-        recipes_limit = self.context['request'].query_params.get(
-            'limit'
-        )
+        if self.context:
+            recipes_limit = self.context['request'].query_params.get(
+                'limit'
+            )
+            if recipes_limit and recipes_limit.isdigit():
+                recipes = recipes[:int(recipes_limit)]
 
-        if recipes_limit:
-            recipes = recipes[:int(recipes_limit)]
-
-        return ShortRecipeSerializer(recipes, many=True).data
+        return ShortRecipeSerializer(
+            recipes, context=self.context,
+            many=True
+        ).data
 
 
 class SubscribeCreateDeleteSerializer(SubscribeSerializer):
@@ -78,21 +82,8 @@ class SubscribeCreateDeleteSerializer(SubscribeSerializer):
         'detail': 'Вы уже подписаны на этого пользователя'
     }
 
-    author = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        write_only=True,
-
-    )
-    subscriber = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        write_only=True,
-    )
-
     class Meta:
-        fields = (
-            'id', 'username', 'first_name', 'last_name', 'email',
-            'recipes_count', 'recipes', 'is_subscribed', 'author', 'subscriber'
-        )
+        fields = SubscribeSerializer.Meta.fields + ('author', 'subscriber')
         model = Subscribe
 
     def validate(self, data):
@@ -105,3 +96,7 @@ class SubscribeCreateDeleteSerializer(SubscribeSerializer):
         ).exists():
             raise ValidationError(self.SUBSCRIPTION_ALREADY_EXISTS)
         return data
+
+    # def to_representation(self, instance):
+    #     print('><<>>>', instance)
+    #     return SubscribeSerializer(instance.author).data

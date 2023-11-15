@@ -1,17 +1,16 @@
-from djoser.views import UserViewSet
+from djoser.views import UserViewSet as DjoserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from recipes.pagination import RecipesUsersPagination
-
 from .models import Subscribe, User
 from .serializers import (SubscribeCreateDeleteSerializer, SubscribeSerializer,
                           UserSerializer)
 
 
-class UserViewSet(UserViewSet):
+class UserViewSet(DjoserViewSet):
     """Вьюсет для регистрации, смены пароля, получения списков пользователей и
     подписок, создания/удаления подписки.
     """
@@ -39,10 +38,10 @@ class UserViewSet(UserViewSet):
         )
         paginate_queryset = self.paginate_queryset(queryset)
 
-        if paginate_queryset is not None:
+        if paginate_queryset:
             serializer = SubscribeSerializer(
                 paginate_queryset,
-                context={"request": request},
+                context={'request': request},
                 many=True
             )
             return self.get_paginated_response(serializer.data)
@@ -55,8 +54,8 @@ class UserViewSet(UserViewSet):
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'],
-            permission_classes=[IsAuthenticated]
-            )
+            permission_classes=[IsAuthenticated],
+            serializer_class=SubscribeCreateDeleteSerializer)
     def subscribe(self, request, id):
         data_dict = {"author": id, "subscriber": request.user.id}
         serializer = SubscribeCreateDeleteSerializer(
@@ -69,13 +68,14 @@ class UserViewSet(UserViewSet):
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id):
-        try:
-            object = Subscribe.objects.get(author=id, subscriber=request.user)
-            object.delete()
+        if Subscribe.objects.filter(
+            author=id,
+            subscriber=request.user
+             ).exists():
+            Subscribe.objects.get(author=id, subscriber=request.user).delete()
             return Response(
                 self.UNSUBSCRIBED, status=status.HTTP_204_NO_CONTENT
             )
-        except Subscribe.DoesNotExist:
-            return Response(
-                self.UNSUBSCRIBED_ERROR, status=status.HTTP_404_NOT_FOUND
-            )
+        return Response(
+            self.UNSUBSCRIBED_ERROR, status=status.HTTP_404_NOT_FOUND
+        )
