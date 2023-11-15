@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
 
-from .constants import USER_MAX_LENGTH, EMAIL_MAX_LENGTH
+from .constants import EMAIL_MAX_LENGTH, USER_MAX_LENGTH
 
 
 class Subscribe(models.Model):

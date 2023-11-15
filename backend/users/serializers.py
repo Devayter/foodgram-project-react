@@ -3,6 +3,7 @@ from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
 from recipes.models import Recipe
+
 from .models import Subscribe, User
 
 
@@ -23,10 +24,11 @@ class UserSerializer(UserSerializer):
         return (request
                 and request.user.is_authenticated
                 and obj.author.author.filter(subscriber=request.user).exists())
-    
+
     # return (request
     #             and request.user.is_authenticated
-    #             and obj.author.author.filter(subscriber=request.user).exists())
+    #             and obj.author.author.filter(
+    # subscriber=request.user).exists())
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
