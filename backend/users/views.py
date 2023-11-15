@@ -5,7 +5,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from recipes.pagination import RecipesUsersPagination
-
 from .models import Subscribe, User
 from .serializers import (SubscribeCreateDeleteSerializer, SubscribeSerializer,
                           UserSerializer)
@@ -72,7 +71,7 @@ class UserViewSet(DjoserViewSet):
         if Subscribe.objects.filter(
             author=id,
             subscriber=request.user
-             ).exists():
+        ).exists():
             Subscribe.objects.get(author=id, subscriber=request.user).delete()
             return Response(
                 self.UNSUBSCRIBED, status=status.HTTP_204_NO_CONTENT
