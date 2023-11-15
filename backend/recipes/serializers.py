@@ -115,8 +115,11 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['is_favorited'] = instance.is_favorited
-        representation['is_in_shopping_cart'] = instance.is_in_shopping_cart
+        if self.context.get('request') == 'GET':
+            representation['is_favorited'] = instance.is_favorited
+            representation['is_in_shopping_cart'] = (
+                instance.is_in_shopping_cart
+            )
         return representation
 
 
@@ -140,6 +143,10 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
     author = UserSerializer(default=serializers.CurrentUserDefault())
     image = Base64ImageField(required=True)
     ingredients = AmountIngredientSerializer(many=True)
+    is_favorited = serializers.ReadOnlyField(read_only=True, default=False)
+    is_in_shopping_cart = serializers.ReadOnlyField(
+        read_only=True, default=False
+    )
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all(),
@@ -147,10 +154,8 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
     )
 
     class Meta:
-        fields = (
-            'id', 'author', 'name', 'text', 'image', 'ingredients',
-            'is_favorited', 'is_in_shopping_cart', 'tags', 'cooking_time'
-        )
+        fields = RecipeSerializer.Meta.fields + ('is_favorited',
+                                                 'is_in_shopping_cart')
         model = Recipe
 
     def validate(self, data):
@@ -225,9 +230,12 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
         return instance
 
     def to_representation(self, instance):
-        return RecipeSerializer(
+        data = RecipeSerializer(
             instance, context={'request': self.context.get('request')}
         ).data
+        data['is_favorited'] = False
+        data['is_in_shopping_cart'] = False
+        return data
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
