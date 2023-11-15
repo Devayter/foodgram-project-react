@@ -3,8 +3,8 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-
 from recipes.pagination import RecipesUsersPagination
+
 from .models import Subscribe, User
 from .serializers import (SubscribeCreateDeleteSerializer, SubscribeSerializer,
                           UserSerializer)

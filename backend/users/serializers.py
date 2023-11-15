@@ -1,8 +1,8 @@
 from django.core.exceptions import ValidationError
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
-
 from recipes.models import Recipe
+
 from .models import Subscribe, User
 
 
