@@ -5,7 +5,6 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from users.serializers import UserSerializer
-
 from .constants import (INGREDIENTS_MIN_VALUE, POSITIVE_SMALL_MAX,
                         TIME_MIN_VALUE)
 from .models import (Favorites, Ingredient, Recipe, RecipeIngredient,
