@@ -1,8 +1,8 @@
 from colorfield.fields import ColorField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from users.models import User
 
+from users.models import User
 from .constants import (INGREDIENTS_MIN_VALUE, NAME_SLUG_MEASURE_MAX_LENGTH,
                         POSITIVE_SMALL_MAX, TIME_MIN_VALUE)
 

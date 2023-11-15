@@ -3,8 +3,8 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from users.serializers import UserSerializer
 
+from users.serializers import UserSerializer
 from .constants import (INGREDIENTS_MIN_VALUE, POSITIVE_SMALL_MAX,
                         TIME_MIN_VALUE)
 from .models import (Favorites, Ingredient, Recipe, RecipeIngredient,
