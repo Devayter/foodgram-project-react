@@ -62,22 +62,8 @@ class AmountIngredientSerializer(serializers.ModelSerializer):
         queryset=Ingredient.objects.all(),
     )
     amount = serializers.IntegerField(
-        validators=[
-            MinValueValidator(
-                INGREDIENTS_MIN_VALUE,
-                message=(
-                    'Количество ингрендиентов не должно быть меньше {0}. '
-                    'Введите допустимое значение'.format(INGREDIENTS_MIN_VALUE)
-                ),
-            ),
-            MaxValueValidator(
-                POSITIVE_SMALL_MAX,
-                message=(
-                    'Количество ингрендиентов не должно быть больше {0}. '
-                    'Введите допустимое значение'.format(POSITIVE_SMALL_MAX)
-                ),
-            ),
-        ],
+        min_value=INGREDIENTS_MIN_VALUE,
+        max_value=POSITIVE_SMALL_MAX
     )
 
     class Meta:
@@ -101,26 +87,25 @@ class RecipeSerializer(serializers.ModelSerializer):
     EMPTY_INGREDIENTS_ERROR = 'Отсутствуют ингредиенты'
     EMPTY_TAGS_ERROR = 'Отсутствуют теги'
 
+    author = UserSerializer(default=serializers.CurrentUserDefault())
     ingredients = RecipeIngredientSerializer(
         source='ingredients_used',
         many=True,
+    )
+    is_favorited = serializers.ReadOnlyField(default=False)
+    is_in_shopping_cart = serializers.ReadOnlyField(default=False)
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all(),
+        allow_empty=False,
     )
 
     class Meta:
         fields = (
             'id', 'author', 'name', 'text', 'image', 'ingredients', 'tags',
-            'cooking_time'
+            'cooking_time', 'is_favorited', 'is_in_shopping_cart'
         )
         model = Recipe
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        if self.context.get('request') == 'GET':
-            representation['is_favorited'] = instance.is_favorited
-            representation['is_in_shopping_cart'] = (
-                instance.is_in_shopping_cart
-            )
-        return representation
 
 
 class RecipeCreateUpdateSerializer(RecipeSerializer):
@@ -132,31 +117,19 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
     DOUBLE_INGREDIENT_ERROR = {'detail': 'Повтор ингредиентов'}
     DOUBLE_TAG_ERROR = {'detail': 'Повтор тегов'}
     RECIPE_ALREADY_EXISTS_ERROR = {'detail': "Рецепт уже был добавлен"}
-
-    cooking_time = serializers.IntegerField(
-        validators=[
-            MinValueValidator(TIME_MIN_VALUE),
-            MaxValueValidator(POSITIVE_SMALL_MAX),
-        ],
-
-    )
+    
     author = UserSerializer(default=serializers.CurrentUserDefault())
+    cooking_time = serializers.IntegerField(
+        min_value=TIME_MIN_VALUE,
+        max_value=POSITIVE_SMALL_MAX
+    )
     image = Base64ImageField(required=True)
     ingredients = AmountIngredientSerializer(many=True)
-    is_favorited = serializers.ReadOnlyField(read_only=True, default=False)
-    is_in_shopping_cart = serializers.ReadOnlyField(
-        read_only=True, default=False
-    )
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all(),
         allow_empty=False,
     )
-
-    class Meta:
-        fields = RecipeSerializer.Meta.fields + ('is_favorited',
-                                                 'is_in_shopping_cart')
-        model = Recipe
 
     def validate(self, data):
         ingredients = data.get('ingredients')
@@ -226,16 +199,13 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
         instance.tags.clear()
         instance.tags.set(tags_data)
 
-        super().update(instance, validated_data)
-        return instance
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        data = RecipeSerializer(
-            instance, context={'request': self.context.get('request')}
+        return RecipeSerializer(
+            instance,
+            context={'request': self.context.get('request')}
         ).data
-        data['is_favorited'] = False
-        data['is_in_shopping_cart'] = False
-        return data
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
@@ -260,7 +230,10 @@ class FavShopSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        return ShortRecipeSerializer(instance.recipe).data
+        return ShortRecipeSerializer(
+            instance.recipe,
+            context={'request': self.context.get('request')}
+        ).data
 
 
 class FavoritesSerializer(FavShopSerializer):

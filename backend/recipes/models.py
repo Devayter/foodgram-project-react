@@ -7,7 +7,7 @@ from .constants import (INGREDIENTS_MIN_VALUE, NAME_SLUG_MEASURE_MAX_LENGTH,
                         POSITIVE_SMALL_MAX, TIME_MIN_VALUE)
 
 
-class AbstractRecipeUser(models.Model):
+class RecipeUser(models.Model):
     """Абстрактная родительская модель для списка покупок и избранного."""
 
     recipe = models.ForeignKey(
@@ -31,7 +31,7 @@ class AbstractRecipeUser(models.Model):
         return f'{self.recipe}, {self.user}'
 
 
-class Favorites(AbstractRecipeUser):
+class Favorites(RecipeUser):
     """Модель избранного."""
 
     class Meta:
@@ -83,16 +83,12 @@ class Recipe(models.Model):
         validators=[
             MinValueValidator(
                 TIME_MIN_VALUE,
-                message=(
-                    'Время готовки должно быть больше или равно {0}. '
-                    'Введите допустимое значение'.format(TIME_MIN_VALUE)
-                ),
+                message=('Время готовки не должно быть  равно нулю.'),
             ),
             MaxValueValidator(
                 POSITIVE_SMALL_MAX,
                 message=(
-                    'Время готовки должно быть меньше или равно {0}. '
-                    'Введите допустимое значение.'.format(POSITIVE_SMALL_MAX)
+                    '{POSITIVE_SMALL_MAX} - максимальное допустимое значение.'
                 ),
             ),
         ],
@@ -140,16 +136,12 @@ class RecipeIngredient(models.Model):
         validators=[
             MinValueValidator(
                 INGREDIENTS_MIN_VALUE,
-                message=(
-                    'Количество ингрендиентов не должно быть меньше {0}. '
-                    'Введите допустимое значение'.format(INGREDIENTS_MIN_VALUE)
-                ),
+                message=('Количество ингрендиентов не должно быть равно нулю'),
             ),
             MaxValueValidator(
                 POSITIVE_SMALL_MAX,
                 message=(
-                    'Количество ингрендиентов не должно быть больше {0}. '
-                    'Введите допустимое значение'.format(POSITIVE_SMALL_MAX)
+                    f'{POSITIVE_SMALL_MAX} - максимальное допустимое значение.'
                 ),
             ),
         ],
@@ -206,7 +198,7 @@ class RecipeTag(models.Model):
         return f'{self.recipe} {self.tag}'
 
 
-class ShoppingCart(AbstractRecipeUser):
+class ShoppingCart(RecipeUser):
     """Модель списка покупок."""
 
     class Meta:

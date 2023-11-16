@@ -41,27 +41,27 @@ class SubscribeSerializer(UserSerializer):
     """Сериализатор подписок для GET запросов."""
 
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.ReadOnlyField(source='author.recipes.count')
+    recipes_count = serializers.ReadOnlyField(source='recipes.count')
 
     class Meta:
-        fields = ('author', 'subscriber', 'recipes', 'recipes_count')
-        model = Subscribe
+        fields = UserSerializer.Meta.fields + ('recipes', 'recipes_count')
+        model = User
 
     def get_recipes(self, instance):
-        recipes = Recipe.objects.filter(author=instance.author)
+        recipes = instance.recipes.all()
         if self.context:
-            recipes_limit = self.context['request'].query_params.get(
-                'limit'
-            )
-            if recipes_limit and recipes_limit.isdigit():
+            recipes_limit = self.context['request'].query_params.get('limit')
+            try:
                 recipes = recipes[:int(recipes_limit)]
+            except TypeError:
+                recipes = recipes
         return ShortRecipeSerializer(
             recipes, context=self.context,
             many=True
         ).data
 
 
-class SubscribeCreateDeleteSerializer(SubscribeSerializer):
+class SubscribeCreateDeleteSerializer(serializers.ModelSerializer):
     """Сериализатор для создания и удаления подписок."""
 
     SELF_SUBSCRIPTION_ERROR = {
@@ -72,7 +72,7 @@ class SubscribeCreateDeleteSerializer(SubscribeSerializer):
     }
 
     class Meta:
-        fields = SubscribeSerializer.Meta.fields + ('author', 'subscriber')
+        fields = ('author', 'subscriber')
         model = Subscribe
 
     def validate(self, data):
@@ -88,6 +88,6 @@ class SubscribeCreateDeleteSerializer(SubscribeSerializer):
 
     def to_representation(self, instance):
         return SubscribeSerializer(
-            instance,
-            context={'request': self.context.get('request')}
+            instance.author,
+            context=self.context
         ).data

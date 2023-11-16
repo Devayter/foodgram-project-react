@@ -38,6 +38,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
 
     def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return Recipe.objects.select_related('author').prefetch_related(
+                'tags',
+                'ingredients'
+            ).all()
         return (
             Recipe.objects.select_related('author').prefetch_related(
                 'tags',
@@ -84,8 +89,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         покупок.
         """
 
-        if model.objects.filter(recipe=pk, user=request.user).exists():
-            model.objects.filter(recipe=pk, user=request.user).delete()
+        queryset = model.objects.filter(recipe=pk, user=request.user)
+        if queryset.exists():
+            queryset.delete()
             return Response(
                 RecipeViewSet.RECIPE_DELETE_MESSAGE,
                 status=status.HTTP_204_NO_CONTENT

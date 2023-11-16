@@ -11,7 +11,8 @@ from .serializers import (SubscribeCreateDeleteSerializer, SubscribeSerializer,
 
 
 class UserViewSet(DjoserViewSet):
-    """Вьюсет для регистрации, смены пароля, получения списков пользователей и
+    """
+    Вьюсет для регистрации, смены пароля, получения списков пользователей и
     подписок, создания/удаления подписки.
     """
 
@@ -33,9 +34,7 @@ class UserViewSet(DjoserViewSet):
             permission_classes=[IsAuthenticated])
     def subscriptions(self, request):
 
-        queryset = Subscribe.objects.filter(
-            subscriber=self.request.user.id
-        )
+        queryset = User.objects.filter(author__subscriber=request.user)
         paginate_queryset = self.paginate_queryset(queryset)
 
         if paginate_queryset:
@@ -45,10 +44,9 @@ class UserViewSet(DjoserViewSet):
                 many=True
             )
             return self.get_paginated_response(serializer.data)
-
         serializer = SubscribeSerializer(
             queryset,
-            context={"request": request},
+            context={'request': request},
             many=True
         )
         return Response(serializer.data)
@@ -57,10 +55,10 @@ class UserViewSet(DjoserViewSet):
             permission_classes=[IsAuthenticated],
             serializer_class=SubscribeCreateDeleteSerializer)
     def subscribe(self, request, id):
-        data_dict = {"author": id, "subscriber": request.user.id}
+        data_dict = {'author': id, 'subscriber': request.user.id}
         serializer = SubscribeCreateDeleteSerializer(
             data=data_dict,
-            context={"request": request}
+            context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -68,11 +66,9 @@ class UserViewSet(DjoserViewSet):
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id):
-        if Subscribe.objects.filter(
-            author=id,
-            subscriber=request.user
-        ).exists():
-            Subscribe.objects.get(author=id, subscriber=request.user).delete()
+        queryset = Subscribe.objects.filter(author=id, subscriber=request.user)
+        if queryset.exists():
+            queryset.delete()
             return Response(
                 self.UNSUBSCRIBED, status=status.HTTP_204_NO_CONTENT
             )
