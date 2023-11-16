@@ -1,5 +1,4 @@
 import webcolors
-from django.core.validators import MaxValueValidator, MinValueValidator
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -117,7 +116,7 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
     DOUBLE_INGREDIENT_ERROR = {'detail': 'Повтор ингредиентов'}
     DOUBLE_TAG_ERROR = {'detail': 'Повтор тегов'}
     RECIPE_ALREADY_EXISTS_ERROR = {'detail': "Рецепт уже был добавлен"}
-    
+
     author = UserSerializer(default=serializers.CurrentUserDefault())
     cooking_time = serializers.IntegerField(
         min_value=TIME_MIN_VALUE,
