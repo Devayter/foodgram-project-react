@@ -109,7 +109,7 @@ class Recipe(models.Model):
         max_length=NAME_SLUG_MEASURE_MAX_LENGTH,
         verbose_name='Название рецепта'
     )
-    pub_date = models.DateTimeField(
+    pub_date = models.DateField(
         auto_now_add=True,
         verbose_name='Дата публикации'
     )

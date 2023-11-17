@@ -1,5 +1,4 @@
 import os
-from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -103,15 +102,9 @@ DJOSER = {
 
 }
 
-CELERY_BEAT_SCHEDULE = {
-    'delete_expired_blacklisted_tokens': {
-        'task': 'yourapp.tasks.delete_expired_blacklisted_tokens',
-        'schedule': timedelta(days=1),
-    },
-}
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = '/media'
 
 
 AUTH_USER_MODEL = 'users.User'
