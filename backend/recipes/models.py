@@ -88,7 +88,7 @@ class Recipe(models.Model):
             MaxValueValidator(
                 POSITIVE_SMALL_MAX,
                 message=(
-                    '{POSITIVE_SMALL_MAX} - максимальное допустимое значение.'
+                    f'{POSITIVE_SMALL_MAX} - максимальное допустимое значение.'
                 ),
             ),
         ],

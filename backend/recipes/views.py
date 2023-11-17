@@ -38,16 +38,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
 
     def get_queryset(self):
+
+        queryset = Recipe.objects.select_related('author').prefetch_related(
+            'tags',
+            'ingredients'
+        )
+
         if not self.request.user.is_authenticated:
-            return Recipe.objects.select_related('author').prefetch_related(
-                'tags',
-                'ingredients'
-            ).all()
+            return queryset.all()
         return (
-            Recipe.objects.select_related('author').prefetch_related(
-                'tags',
-                'ingredients'
-            ).annotate(
+            queryset.annotate(
                 is_favorited=Exists(
                     Favorites.objects.filter(
                         recipe=OuterRef('id'),

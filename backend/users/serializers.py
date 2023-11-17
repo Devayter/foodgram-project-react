@@ -53,7 +53,7 @@ class SubscribeSerializer(UserSerializer):
             recipes_limit = self.context['request'].query_params.get('limit')
             try:
                 recipes = recipes[:int(recipes_limit)]
-            except TypeError:
+            except ValueError:
                 recipes = recipes
         return ShortRecipeSerializer(
             recipes, context=self.context,

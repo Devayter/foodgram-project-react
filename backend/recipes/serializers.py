@@ -62,7 +62,12 @@ class AmountIngredientSerializer(serializers.ModelSerializer):
     )
     amount = serializers.IntegerField(
         min_value=INGREDIENTS_MIN_VALUE,
-        max_value=POSITIVE_SMALL_MAX
+        max_value=POSITIVE_SMALL_MAX,
+        error_messages={
+            'min_value': 'Количество ингредиетнов не должно быть равно нулю.',
+            'max_value': f'{POSITIVE_SMALL_MAX} - '
+                         f'максимальное допустимое значение.'
+        }
     )
 
     class Meta:
@@ -120,7 +125,12 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
     author = UserSerializer(default=serializers.CurrentUserDefault())
     cooking_time = serializers.IntegerField(
         min_value=TIME_MIN_VALUE,
-        max_value=POSITIVE_SMALL_MAX
+        max_value=POSITIVE_SMALL_MAX,
+        error_messages={
+            'min_value': 'Время приготовления не должно быть равно нулю',
+            'max_value': f'{POSITIVE_SMALL_MAX} - '
+                         f'максимальное допустимое значение.'
+        }
     )
     image = Base64ImageField(required=True)
     ingredients = AmountIngredientSerializer(many=True)
@@ -203,7 +213,7 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
     def to_representation(self, instance):
         return RecipeSerializer(
             instance,
-            context={'request': self.context.get('request')}
+            context=self.context
         ).data
 
 
@@ -231,7 +241,7 @@ class FavShopSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         return ShortRecipeSerializer(
             instance.recipe,
-            context={'request': self.context.get('request')}
+            context=self.context
         ).data
 
 
