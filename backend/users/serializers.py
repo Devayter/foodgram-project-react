@@ -51,10 +51,11 @@ class SubscribeSerializer(UserSerializer):
         recipes = instance.recipes.all()
         if self.context:
             recipes_limit = self.context['request'].query_params.get('limit')
-            try:
-                recipes = recipes[:int(recipes_limit)]
-            except ValueError:
-                recipes = recipes
+            if recipes_limit:
+                try:
+                    recipes = recipes[:int(recipes_limit)]
+                except ValueError:
+                    recipes = recipes
         return ShortRecipeSerializer(
             recipes, context=self.context,
             many=True
