@@ -1,5 +1,6 @@
 ![Workflow status](https://github.com/Devayter/foodgram-project-react/actions/workflows/main.yml/badge.svg)
 # Фудграм
+https://foodgramforyou.ddns.net
 
 ## Стек технологий в проекте
 
