@@ -35,9 +35,7 @@ class UserViewSet(DjoserViewSet):
     def subscriptions(self, request):
 
         queryset = User.objects.filter(author__subscriber=request.user)
-        print('qrueryset - ', queryset)
         paginate_queryset = self.paginate_queryset(queryset)
-        print('paginate queryset - ', paginate_queryset)
 
         serializer = SubscribeSerializer(
             paginate_queryset,
