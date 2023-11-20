@@ -13,6 +13,8 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
 
+CSRF_TRUSTED_ORIGINS = ['http://*', 'https://*']
+
 CORS_URLS_REGEX = r'^/api/.*$'
 
 CORS_ALLOWED_ORIGINS = [
@@ -104,7 +106,7 @@ DJOSER = {
 
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/media'
+MEDIA_ROOT = 'media'
 
 
 AUTH_USER_MODEL = 'users.User'

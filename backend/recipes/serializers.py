@@ -98,9 +98,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     )
     is_favorited = serializers.ReadOnlyField(default=False)
     is_in_shopping_cart = serializers.ReadOnlyField(default=False)
-    tags = serializers.PrimaryKeyRelatedField(
+    tags = TagSerializer(
         many=True,
-        queryset=Tag.objects.all(),
         allow_empty=False,
     )
 
@@ -120,7 +119,6 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
     EMPTY_TAGS_ERROR = {'detail': 'Отсутствуют теги'}
     DOUBLE_INGREDIENT_ERROR = {'detail': 'Повтор ингредиентов'}
     DOUBLE_TAG_ERROR = {'detail': 'Повтор тегов'}
-    RECIPE_ALREADY_EXISTS_ERROR = {'detail': "Рецепт уже был добавлен"}
 
     author = UserSerializer(default=serializers.CurrentUserDefault())
     cooking_time = serializers.IntegerField(
@@ -149,10 +147,6 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
         ]
         if len(ingredients_list) != len(set(ingredients_list)):
             raise ValidationError(self.DOUBLE_INGREDIENT_ERROR)
-
-        text = data.get('text')
-        if Recipe.objects.filter(text=text):
-            raise ValidationError(self.RECIPE_ALREADY_EXISTS_ERROR)
 
         return data
 
@@ -196,16 +190,16 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
         return recipe
 
     def update(self, instance, validated_data):
+        instance.ingredients.clear()
+        instance.tags.clear()
         ingredients_data = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
 
-        instance.ingredients.clear()
         self.ingredients_create_update_data_iteration(
             recipe_id=instance.id,
             ingredients_data=ingredients_data
         )
 
-        instance.tags.clear()
         instance.tags.set(tags_data)
 
         return super().update(instance, validated_data)

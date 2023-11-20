@@ -1,12 +1,11 @@
 from django.core.exceptions import ValidationError
-from djoser.serializers import UserSerializer as DjoserSerializer
 from rest_framework import serializers
 
 from recipes.models import Recipe
 from .models import Subscribe, User
 
 
-class UserSerializer(DjoserSerializer):
+class UserSerializer(serializers.ModelSerializer):
     """Сериализатор пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()
@@ -49,13 +48,18 @@ class SubscribeSerializer(UserSerializer):
 
     def get_recipes(self, instance):
         recipes = instance.recipes.all()
-        if self.context:
-            recipes_limit = self.context['request'].query_params.get('limit')
-            if recipes_limit:
-                try:
-                    recipes = recipes[:int(recipes_limit)]
-                except ValueError:
-                    recipes = recipes
+        request = self.context.get('request')
+
+        if not request:
+            return []
+
+        recipes_limit = request.query_params.get('limit')
+        if recipes_limit:
+            try:
+                recipes = recipes[:int(recipes_limit)]
+            except ValueError:
+                pass
+
         return ShortRecipeSerializer(
             recipes, context=self.context,
             many=True

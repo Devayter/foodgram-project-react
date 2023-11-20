@@ -1,11 +1,11 @@
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import PageNumberPagination
 
 from .constants import PAGE_SIZE
 
 
-class RecipesUsersPagination(LimitOffsetPagination):
+class RecipesUsersPagination(PageNumberPagination):
     """Пагинатор для рецептов."""
 
-    default_limit = PAGE_SIZE
     page_size = PAGE_SIZE
-    limit_query_param = 'limit'
+    page_size_query_param = 'page_size'
+    max_page_size = PAGE_SIZE
