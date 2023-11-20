@@ -17,6 +17,7 @@ services:
     volumes:
       - static:/backend_static
       - media:/media
+      - docks:/docks
     depends_on:
       - db
   frontend:
