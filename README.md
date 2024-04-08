@@ -9,6 +9,8 @@ https://foodgramforyou.ddns.net
 * PostgreSQL
 * Python
 * React
+ 
+<img width="1469" alt="image" src="https://github.com/Devayter/foodgram-project-react/assets/103175986/3c28a666-902a-438a-af4b-904223dcf5ff">
 
 ## Описание проекта
 
